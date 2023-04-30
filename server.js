@@ -382,19 +382,6 @@ app.get("/getDLBook", limiterDefault, function (req, res) {
     }
 });
 
-app.get("/", limiterDefault, function (req, res) {
-    if (req.headers["user-agent"].includes("Mozilla")) {
-        if (fs.existsSync(__dirname + "/public/index.html")) {
-
-            res.sendFile(__dirname + "/public/index.html");
-        } else {
-            res.sendFile(__dirname + "/noClient.html");
-        }
-    } else {
-        res.send("This server cannot handle this request");
-    }
-});
-
 app.get("/img/getColor/:img/:token", limiterDefault, async (req, res) => {
     const token = resolveToken(req.params.token);
     var img = CosmicComicsTemp + "/profiles/" + token + "/current_book/" + req.params.img;
