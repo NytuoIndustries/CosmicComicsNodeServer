@@ -9,7 +9,7 @@ const os = require("os");
 const tinycolor = require("tinycolor2");
 let Unrar = require("unrar");
 const Seven = require("node-7z");
-const {getColor, getPalette} = require('color-extr-thief');
+const { getColor, getPalette } = require('color-extr-thief');
 const Path27Zip = SevenBin.path7za;
 const webp = require('webp-converter');
 let CryptoJS = require("crypto-js");
@@ -66,11 +66,11 @@ if (devMode) {
     CosmicComicsTemp = path.join(__dirname, "CosmicData");
 }
 //Creating the folders to the CosmicData's path
-fs.mkdirSync(CosmicComicsTemp, {recursive: true});
+fs.mkdirSync(CosmicComicsTemp, { recursive: true });
 
 if (!fs.existsSync(CosmicComicsTemp + "/.env")) {
     let envTemplate = "MARVEL_PUBLIC_KEY=\nMARVEL_PRIVATE_KEY=\nGBOOKSAPIKEY=\n"
-    fs.writeFileSync(CosmicComicsTemp + "/.env", envTemplate, {encoding: 'utf8'});
+    fs.writeFileSync(CosmicComicsTemp + "/.env", envTemplate, { encoding: 'utf8' });
 }
 const dotenv = require('dotenv');
 dotenv.config({
@@ -115,17 +115,17 @@ if (!fs.existsSync(CosmicComicsTemp + "/serverconfig.json")) {
         "Token": {},
         "port": 4696
     };
-    fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(obj), {encoding: 'utf8'});
+    fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(obj), { encoding: 'utf8' });
 } else {
     if (devMode === false) {
         //Reseting the serverconfig.json for revoking tokens
         let configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json");
         let config = JSON.parse(configFile);
         config["Token"] = {};
-        fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), {encoding: 'utf8'});
+        fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), { encoding: 'utf8' });
     }
 }
-const upload = multer({dest: CosmicComicsTemp + "/uploads/"});
+const upload = multer({ dest: CosmicComicsTemp + "/uploads/" });
 
 /**
  * Check if the passed param has number in it
@@ -176,7 +176,7 @@ try {
     console.log(e);
 }
 const cors = require('cors');
-const {spawn} = require('child_process');
+const { spawn } = require('child_process');
 const puppeteer = require("puppeteer");
 
 function backupTable(user, tableName) {
@@ -257,8 +257,8 @@ function getDB(forwho) {
 }
 
 app.use(cors());
-app.use(express.json({limit: "50mb"}));
-app.use(express.urlencoded({extended: true}));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(limiterDefault)
 let host;
 const args = process.argv.slice(2);
@@ -297,10 +297,10 @@ app.post("/uploadComic", upload.single("ComicTemp"), function (req, res) {
 app.post("/createUser", limiterDefault, function (req, res) {
     const name = req.body.name;
     const passcode = req.body.password;
-    fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, {recursive: true});
+    fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, { recursive: true });
     changePermissionForFilesInFolder(CosmicComicsTemp + "/profiles/" + name);
     console.log("Creating dir " + name);
-    fs.writeFileSync(CosmicComicsTemp + "/profiles/" + name + "/passcode.txt", passcode.trim(), {encoding: "utf8"});
+    fs.writeFileSync(CosmicComicsTemp + "/profiles/" + name + "/passcode.txt", passcode.trim(), { encoding: "utf8" });
     if (!fs.existsSync(CosmicComicsTemp + "/profiles/" + name + "/config.json")) {
         const obj = {
             path: "",
@@ -337,7 +337,7 @@ app.post("/createUser", limiterDefault, function (req, res) {
         };
         fs.writeFileSync(
             CosmicComicsTemp + "/profiles/" + name + "/config.json",
-            JSON.stringify(obj, null, 2), {encoding: "utf8"}
+            JSON.stringify(obj, null, 2), { encoding: "utf8" }
         );
     }
     if (req.body.pp === {}) {
@@ -352,7 +352,7 @@ app.post("/createUser", limiterDefault, function (req, res) {
     res.sendStatus(200);
 });
 app.get("/null", function (req, res) {
-    res.sendFile(__dirname + "/public/Images/fileDefault.webp");
+    res.sendFile(__dirname + "/public/Images/fileDefault.png");
 });
 app.post("/DL", limiterDefault, function (req, res) {
     console.log(req.body);
@@ -389,7 +389,12 @@ app.get("/img/getColor/:img/:token", limiterDefault, async (req, res) => {
 });
 app.get("/img/getPalette/:token", limiterDefault, async (req, res) => {
     const token = resolveToken(req.params.token);
-    await getPalette(req.headers.img).then(function (palette) {
+    console.log(req.headers.img);
+    let img = req.headers.img;
+    if (!img.includes("http://") && !img.includes("https://")) {
+        img = 'public/' + req.headers.img;
+    }
+    await getPalette(img).then(function (palette) {
         let rgb = "rgb(" + palette[0][0] + "," + palette[0][1] + "," + palette[0][2] + ")";
         if (tinycolor(rgb).isLight()) {
             res.send(tinycolor(rgb).darken(45).toString());
@@ -720,7 +725,7 @@ setInterval(() => {
 setInterval(() => {
     console.log("Removing ZIPs to DL");
     if (fs.existsSync(__dirname + "/public/TODL")) {
-        fs.rmSync(__dirname + "/public/TODL", {recursive: true, force: true});
+        fs.rmSync(__dirname + "/public/TODL", { recursive: true, force: true });
     }
 }, 2 * 60 * 60 * 1000);
 app.get("/profile/login/:name/:passcode", accountLimiter, (req, res) => {
@@ -762,7 +767,7 @@ app.post("/profile/logout/:token", limiterDefault, (req, res) => {
         for (var j in config["Token"]) {
             if (config["Token"][j] == req.params.token) {
                 delete config["Token"][j];
-                fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), {encoding: 'utf8'});
+                fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), { encoding: 'utf8' });
                 res.sendStatus(200);
                 return;
             }
@@ -1842,17 +1847,17 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
             var resEnd;
             Stream.on("end", async () => {
                 listOfElements = fs.readdirSync(ExtractDir);
-                const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
+                const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
                 const page = await browser.newPage();
                 let bignb = 0;
                 for (var i = 0; i < listOfElements.length; i++) {
                     var el = listOfElements[i];
                     if (el.includes(".xhtml")) {
-                        await page.goto("file://" + ExtractDir + "/" + el, {waitUntil: "networkidle0"});
+                        await page.goto("file://" + ExtractDir + "/" + el, { waitUntil: "networkidle0" });
                         await page.emulateMediaType('print');
                         n = parseInt(name) + 1;
                         name = Array(5 - String(n).length + 1).join("0") + n;
-                        await page.screenshot({path: ExtractDir + "/" + name + ".png", fullPage: true});
+                        await page.screenshot({ path: ExtractDir + "/" + name + ".png", fullPage: true });
                         bignb++;
                     }
                 }
@@ -1860,7 +1865,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 let allFiles = fs.readdirSync(ExtractDir);
                 allFiles.forEach((el) => {
                     if (!el.includes(".png")) {
-                        fs.rmSync(ExtractDir + "/" + el, {recursive: true});
+                        fs.rmSync(ExtractDir + "/" + el, { recursive: true });
                     }
                 });
                 listOfElements = GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
@@ -1891,7 +1896,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
             });
         } else if (ext === "pdf") {
 
-            const {spawn} = require('child_process');
+            const { spawn } = require('child_process');
             let ls;
             ls = spawn('convert', ['-density', '300', zipPath, ExtractDir + '/%d.jpg']);
             ls.stdout.on('data', (data) => {
@@ -2259,10 +2264,10 @@ process.on('SIGINT', () => {
     console.log('SIGINT signal received: closing server');
     console.log("Removing ZIPs to DL");
     if (fs.existsSync(__dirname + "/public/TODL")) {
-        fs.rmSync(__dirname + "/public/TODL", {recursive: true, force: true});
+        fs.rmSync(__dirname + "/public/TODL", { recursive: true, force: true });
     }
     if (fs.existsSync(CosmicComicsTemp + "/uploads")) {
-        fs.rmSync(CosmicComicsTemp + "/uploads", {recursive: true, force: true});
+        fs.rmSync(CosmicComicsTemp + "/uploads", { recursive: true, force: true });
     }
     server.close(() => {
         console.log('Server closed');
@@ -2274,10 +2279,10 @@ app.post("/configServ/:name/:passcode/:port", limiterDefault, (req, res) => {
     const name = req.params.name;
     const passcode = req.params.passcode;
     const portServ = req.params.port;
-    fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, {recursive: true});
+    fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, { recursive: true });
     changePermissionForFilesInFolder(CosmicComicsTemp + "/profiles/" + name);
     console.log("Creating dir " + name);
-    fs.writeFileSync(CosmicComicsTemp + "/profiles/" + name + "/passcode.txt", passcode, {encoding: "utf8"});
+    fs.writeFileSync(CosmicComicsTemp + "/profiles/" + name + "/passcode.txt", passcode, { encoding: "utf8" });
     if (!fs.existsSync(CosmicComicsTemp + "/profiles/" + name + "/config.json")) {
         const obj = {
             path: "",
@@ -2314,7 +2319,7 @@ app.post("/configServ/:name/:passcode/:port", limiterDefault, (req, res) => {
         };
         fs.writeFileSync(
             CosmicComicsTemp + "/profiles/" + name + "/config.json",
-            JSON.stringify(obj, null, 2), {encoding: "utf8"}
+            JSON.stringify(obj, null, 2), { encoding: "utf8" }
         );
     }
     let random = Math.floor(Math.random() * (fs.readdirSync(__dirname + "/public/Images/account_default/").length - 1) + 1);
@@ -2331,7 +2336,7 @@ app.get("/profile/getPPBN/:name", accountLimiter, (req, res) => {
     res.sendFile(CosmicComicsTemp + "/profiles/" + req.params.name + "/pp.png");
 });
 app.get("/profile/custo/getNumber", accountLimiter, (req, res) => {
-    res.send({"length": fs.readdirSync(__dirname + "/public/Images/account_default").length});
+    res.send({ "length": fs.readdirSync(__dirname + "/public/Images/account_default").length });
 });
 /*app.get("/api/marvel", (req, res) => {
     let id = req.body.id
@@ -2344,7 +2349,7 @@ app.post("/profile/modification", accountLimiter, (req, res) => {
     const token = resolveToken(req.body.token);
     console.log(req.body.npp);
     if (req.body.npass != null) {
-        fs.writeFileSync(CosmicComicsTemp + "/profiles/" + token + "/passcode.txt", req.body.npass.trim(), {encoding: "utf-8"});
+        fs.writeFileSync(CosmicComicsTemp + "/profiles/" + token + "/passcode.txt", req.body.npass.trim(), { encoding: "utf-8" });
     }
     if (req.body.npp !== {}) {
         let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, __dirname + "/public");
@@ -2360,7 +2365,7 @@ app.post("/profile/deleteAccount", accountLimiter, (req, res) => {
     const token = resolveToken(req.body.token);
     getDB(token).close();
     openedDB.delete(token);
-    fs.rm(CosmicComicsTemp + "/profiles/" + token, {recursive: true, force: true}, function (err) {
+    fs.rm(CosmicComicsTemp + "/profiles/" + token, { recursive: true, force: true }, function (err) {
         console.log(err);
     });
 });
