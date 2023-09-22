@@ -34,7 +34,7 @@ var apiGoogleLimiter = RateLimit({
 })
 var viewerLimiter = RateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 200
+    max: 20000,
 })
 var accountLimiter = RateLimit({
     windowMs: 1 * 60 * 1000 * 60,
@@ -275,6 +275,10 @@ const server = app.listen(port, "0.0.0.0", function () {
     port = this.address().port;
     console.log("Listening on port %s:%s!", host, port);
 });
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
 app.post("/downloadBook", limiterDefault, function (req, res) {
     if (fs.existsSync(CosmicComicsTemp + "/downloads") === false) {
         fs.mkdirSync(CosmicComicsTemp + "/downloads");
@@ -392,9 +396,10 @@ app.get("/img/getPalette/:token", limiterDefault, async (req, res) => {
     const token = resolveToken(req.params.token);
     console.log(req.headers.img);
     let img = req.headers.img;
-    if (!img.includes("http://") && !img.includes("https://")) {
-        img = 'public/' + req.headers.img;
+    if (img.includes("localhost:" + port)) {
+        img = 'public/' + img.split("localhost:" + port)[1];
     }
+
     await getPalette(img).then(function (palette) {
         let rgb = "rgb(" + palette[0][0] + "," + palette[0][1] + "," + palette[0][2] + ")";
         if (tinycolor(rgb).isLight()) {
@@ -474,7 +479,6 @@ app.get("/lang/:lang", limiterDefault, (req, res) => {
 });
 app.get("/view/isDir/:path", viewerLimiter, (req, res) => {
     var isDir = fs.statSync(replaceHTMLAdressPath(req.params.path)).isDirectory();
-    console.log(isDir);
     res.send(isDir);
 });
 app.get("/view/exist/:path", viewerLimiter, (req, res) => {
