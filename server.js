@@ -69,8 +69,7 @@ if (devMode) {
 fs.mkdirSync(CosmicComicsTemp, { recursive: true });
 
 if (!fs.existsSync(CosmicComicsTemp + "/.env")) {
-    let envTemplate = "MARVEL_PUBLIC_KEY=\nMARVEL_PRIVATE_KEY=\nGBOOKSAPIKEY=\n"
-    fs.writeFileSync(CosmicComicsTemp + "/.env", envTemplate, { encoding: 'utf8' });
+    fs.renameSync(__dirname + "/.env.sample", CosmicComicsTemp + "/.env");
 }
 const dotenv = require('dotenv');
 dotenv.config({
@@ -278,12 +277,6 @@ app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
 });
-
-if (process.env.ENABLE_REACT_ROUTER) {
-    app.use((req, res, next) => {
-        res.sendFile(path.join(__dirname, "public", "index.html"));
-    });
-}
 
 app.post("/downloadBook", function (req, res) {
     if (fs.existsSync(CosmicComicsTemp + "/downloads") === false) {
@@ -2393,15 +2386,30 @@ app.post("/profile/deleteAccount", accountLimiter, (req, res) => {
         console.log(err);
     });
 });
-//If page not found
-app.all('*', (req, res) => {
-    if (req.headers["user-agent"].includes("Mozilla")) {
-        if (fs.existsSync(__dirname + "/public/404.html")) {
-            res.sendFile(__dirname + "/public/404.html");
+
+//REACT ROUTER
+console.log("REACT ROUTER : ", process.env.ENABLE_REACT_ROUTER);
+if (process.env.ENABLE_REACT_ROUTER === "true") {
+    app.use((req, res, next) => {
+        if (fs.existsSync(__dirname + "/public/index.html")) {
+            res.sendFile(path.join(__dirname, "public", "index.html"));
         } else {
             res.sendFile(__dirname + "/noClient.html");
         }
-        return;
+    });
+}
+
+//If page not found
+app.all('*', (req, res) => {
+    if (process.env.ENABLE_REACT_ROUTER === "false") {
+        if (req.headers["user-agent"].includes("Mozilla")) {
+            if (fs.existsSync(__dirname + "/public/404.html")) {
+                res.sendFile(__dirname + "/public/404.html");
+            } else {
+                res.sendFile(__dirname + "/noClient.html");
+            }
+            return;
+        }
     }
     res.send("This server cannot handle this request");
 });
