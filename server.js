@@ -278,6 +278,13 @@ app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
 });
+
+if (process.env.ENABLE_REACT_ROUTER) {
+    app.use((req, res, next) => {
+        res.sendFile(path.join(__dirname, "public", "index.html"));
+    });
+}
+
 app.post("/downloadBook", function (req, res) {
     if (fs.existsSync(CosmicComicsTemp + "/downloads") === false) {
         fs.mkdirSync(CosmicComicsTemp + "/downloads");
