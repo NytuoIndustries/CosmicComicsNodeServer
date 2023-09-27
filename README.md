@@ -7,8 +7,6 @@
 <h2>CosmicComics Node Server</h2>
   This project is part of <a href="https://github.com/Nytuo/CosmicComics">CosmicComics</a>
   <br />
-  <a href="#about"><strong>Explore the screenshots »</strong></a>
-  <br />
   <br />
   <a href="https://github.com/NytuoIndustries/CosmicComicsNodeServer/issues/new?assignees=&labels=bug&template=01_BUG_REPORT.md&title=bug%3A+">Report a Bug</a>
   ·
@@ -55,8 +53,6 @@
 
 ## About
 
-<table><tr><td>
-
 Cosmic Comics is a Comics and Mangas reader and collectionner.  
 
 ### Related repositories
@@ -83,20 +79,12 @@ This is all you can do with this software and more:
 - Libraries information provided by APIs (Marvel API, Google Books API, Anilist,...)
 - Continue reading where you stopped and more...
 
-<details>
-<summary>Screenshots</summary>
-<br>
-
-</details>
-
-</td></tr></table>
-
 ### Built With
-
+<div style="display: flex; align-item: center">
 <img src="https://img.shields.io/badge/NodeJS-black?style=for-the-badge&logo=node.js"/>
-<img src="https://img.shields.io/badge/JavaScript-black?style=for-the-badge&logo=javascript"/>
-<img src="https://img.shields.io/badge/Express-black?style=for-the-badge&logo=express"/>
-<img src="https://img.shields.io/badge/NPM-black?style=for-the-badge&logo=npm"/>
+  <img src="https://img.shields.io/badge/JavaScript-black?style=for-the-badge&logo=javascript"/>
+  <img src="https://img.shields.io/badge/Express-black?style=for-the-badge&logo=express"/>
+  <img src="https://img.shields.io/badge/NPM-black?style=for-the-badge&logo=npm"/></div>
 
 ## Getting Started
 
