@@ -42,7 +42,7 @@ var accountLimiter = RateLimit({
 })
 const isPortable = fs.existsSync(path.join(__dirname, "portable.txt"));
 const isElectron = fs.existsSync(path.join(__dirname, 'portable.txt')) && fs.readFileSync(path.join(__dirname, "portable.txt"), "utf8") === "electron";
-let devMode = true;
+let devMode = false;
 
 
 let path2Data;
@@ -69,7 +69,7 @@ if (devMode) {
 fs.mkdirSync(CosmicComicsTemp, { recursive: true });
 
 if (!fs.existsSync(CosmicComicsTemp + "/.env")) {
-    fs.renameSync(__dirname + "/.env.sample", CosmicComicsTemp + "/.env");
+    fs.writeFileSync(CosmicComicsTemp + "/.env", fs.readFileSync(__dirname + "/.env.sample"));
 }
 const dotenv = require('dotenv');
 dotenv.config({
