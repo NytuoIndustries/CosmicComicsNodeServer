@@ -398,14 +398,20 @@ app.get("/img/getPalette/:token", async (req, res) => {
     if (img.includes("localhost:" + port)) {
         img = 'public/' + img.split("localhost:" + port)[1];
     }
+    if (img.includes("fileDefault")) {
+        img = __dirname + "/public/Images/fileDefault.png";
+    }
 
     await getPalette(img).then(function (palette) {
         let rgb = "rgb(" + palette[0][0] + "," + palette[0][1] + "," + palette[0][2] + ")";
+        let rgb2 = "rgb(" + palette[1][0] + "," + palette[1][1] + "," + palette[1][2] + ")";
         if (tinycolor(rgb).isLight()) {
-            res.send(tinycolor(rgb).darken(45).toString());
-        } else {
-            res.send(rgb);
+            rgb = tinycolor(rgb).darken(45).toString();
         }
+        if (tinycolor(rgb2).isLight()) {
+            rgb2 = tinycolor(rgb2).darken(45).toString();
+        }
+        res.send([rgb, rgb2]);
     });
 });
 app.get("/profile/DLBDD/:token", (req, res) => {
@@ -1457,7 +1463,7 @@ app.get("/insert/marvel/book/", apiMarvelLimiter, async function (req, res) {
         }
         if (cdata["data"]["total"] > 0) {
             cdata = cdata["data"]["results"][0];
-            await insertIntoDB("", `(${randomUUID()},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"].replaceAll("'", "''")}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"].replaceAll("'", "''")}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books")
             GETMARVELAPI_Creators(cdata["id"], "comics").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
@@ -1471,7 +1477,7 @@ app.get("/insert/marvel/book/", apiMarvelLimiter, async function (req, res) {
                 }
             });
         } else {
-            await insertIntoDB("", `(${randomUUID()},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
         }
     })
 })
@@ -1496,7 +1502,7 @@ app.get("/insert/ol/book/", async function (req, res) {
                 console.log(book);
                 let bookD = book["details"];
                 console.log(bookD);
-                await insertIntoDB("", `(${randomUUID()},'${book["bib_key"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${book.hasOwnProperty("thumbnail_url") ? book["thumbnail_url"].replace("-S", "-L") : null}','${null}','${bookD["description"] !== undefined ? bookD["description"].replaceAll("'", "''") : null}','${bookD["physical_format"] !== undefined ? bookD["physical_format"] : null}',${bookD["number_of_pages"] !== undefined ? bookD["number_of_pages"] : null},'${bookD["info_url"] !== undefined ? JSON.stringify(bookD["info_url"]) : null}','${null}','${bookD["authors"] !== undefined ? JSON.stringify(bookD["authors"]) : null}','${null}','${null}','${bookD["publish_date"] !== undefined ? JSON.stringify(bookD["publish_date"]) : null}','${null}','${null}','${null}',false)`, token, "Books")
+                await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${book["bib_key"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${book.hasOwnProperty("thumbnail_url") ? book["thumbnail_url"].replace("-S", "-L") : null}','${null}','${bookD["description"] !== undefined ? bookD["description"].replaceAll("'", "''") : null}','${bookD["physical_format"] !== undefined ? bookD["physical_format"] : null}',${bookD["number_of_pages"] !== undefined ? bookD["number_of_pages"] : null},'${bookD["info_url"] !== undefined ? JSON.stringify(bookD["info_url"]) : null}','${null}','${bookD["authors"] !== undefined ? JSON.stringify(bookD["authors"]) : null}','${null}','${null}','${bookD["publish_date"] !== undefined ? JSON.stringify(bookD["publish_date"]) : null}','${null}','${null}','${null}',false)`, token, "Books")
                 let bookauthors = bookD["authors"];
                 for (let i = 0; i < bookauthors.length; i++) {
                     await insertIntoDB("", `('${bookauthors[i]["key"] + "_3"}','${bookauthors[i]["name"].replaceAll("'", "''")}','${null}',${null},'${null}')`, token, "Creators")
@@ -1505,7 +1511,7 @@ app.get("/insert/ol/book/", async function (req, res) {
             })
         } else {
             res.send(cdata)
-            await insertIntoDB("", `(${randomUUID()},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
         }
     })
 })
@@ -1521,13 +1527,13 @@ app.get("/insert/googlebooks/book/", apiGoogleLimiter, async function (req, res)
         }
         if (cdata["totalItems"] > 0) {
             cdata = cdata["items"][0];
-            await insertIntoDB("", `(${randomUUID()},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["volumeInfo"]["imageLinks"] !== undefined ? (cdata["volumeInfo"]["imageLinks"]["large"] !== undefined ? (cdata["volumeInfo"]["imageLinks"]["large"]) : (cdata["volumeInfo"]["imageLinks"]["thumbnail"])) : null}','${null}','${cdata["volumeInfo"]["description"] !== undefined ? cdata["volumeInfo"]["description"].replaceAll("'", "''") : null}','${cdata["volumeInfo"]["printType"]}',${cdata["volumeInfo"]["pageCount"]},'${JSON.stringify(cdata["volumeInfo"]["infoLink"])}','${null}','${JSON.stringify(cdata["volumeInfo"]["authors"])}','${null}','${cdata["saleInfo"]["retailPrice"] !== undefined ? (JSON.stringify(cdata["saleInfo"]["retailPrice"]["amount"])) : null}','${JSON.stringify(cdata["volumeInfo"]["publishedDate"])}','${null}','${null}','${null}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["volumeInfo"]["imageLinks"] !== undefined ? (cdata["volumeInfo"]["imageLinks"]["large"] !== undefined ? (cdata["volumeInfo"]["imageLinks"]["large"]) : (cdata["volumeInfo"]["imageLinks"]["thumbnail"])) : null}','${null}','${cdata["volumeInfo"]["description"] !== undefined ? cdata["volumeInfo"]["description"].replaceAll("'", "''") : null}','${cdata["volumeInfo"]["printType"]}',${cdata["volumeInfo"]["pageCount"]},'${JSON.stringify(cdata["volumeInfo"]["infoLink"])}','${null}','${JSON.stringify(cdata["volumeInfo"]["authors"])}','${null}','${cdata["saleInfo"]["retailPrice"] !== undefined ? (JSON.stringify(cdata["saleInfo"]["retailPrice"]["amount"])) : null}','${JSON.stringify(cdata["volumeInfo"]["publishedDate"])}','${null}','${null}','${null}',false)`, token, "Books")
             let authorsccdata = cdata["volumeInfo"]["authors"];
             for (let i = 0; i < authorsccdata.length; i++) {
                 await insertIntoDB("", `('${Math.floor(Math.random() * 100000) + "_4"}','${authorsccdata[i].replaceAll("'", "''")}','${null}',${null},'${null}')`, token, "Creators")
             }
         } else {
-            await insertIntoDB("", `(${randomUUID()},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${null}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
         }
     })
 })
@@ -1562,7 +1568,7 @@ app.post("/insert/anilist/book", apiAnilistLimiter, function (req, res) {
                     break;
                 }
             }
-            insertIntoDB("", `(${randomUUID()},'${null}','${realname}',${null},${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${"Anilist_" + realname.replaceAll(" ", "$") + "_" + SerieName.replaceAll(" ", "$")}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
+            insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${null}','${realname}',${null},${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${"Anilist_" + realname.replaceAll(" ", "$") + "_" + SerieName.replaceAll(" ", "$")}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
         });
     } catch (e) {
         console.log(e);
