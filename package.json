@@ -11,7 +11,12 @@
   "license": "GPL-3.0-only",
   "private": false,
   "scripts": {
-    "serv": "nodemon server.js"
+    "serv": "nodemon server.js",
+    "swagger-gen" : "node swagger-gen.js"
+  },
+  "devDependencies": {
+    "swagger-ui-express": "5.0.0",
+    "swagger-autogen": "2.23.6"
   },
   "dependencies": {
     "7zip-bin": "^5.1.1",

@@ -259,6 +259,15 @@ function getDB(forwho) {
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+try {
+    const swaggerUI = require("swagger-ui-express");
+    const swaggerDoc = require("./swagger.json");
+    app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDoc));
+} catch (e) {
+    console.log("Swagger not found");
+}
+
 let host;
 const args = process.argv.slice(2);
 let port = JSON.parse(fs.readFileSync(CosmicComicsTemp + "/serverconfig.json").toString()).port;
