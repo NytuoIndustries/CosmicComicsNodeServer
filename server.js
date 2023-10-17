@@ -758,6 +758,7 @@ app.get("/profile/login/:name/:passcode", accountLimiter, (req, res) => {
                 config["Token"][req.params.name] = token;
             }
             fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config));
+            fs.mkdirSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/current_book", { recursive: true });
             res.send(token);
         } else {
             res.send(false);
