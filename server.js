@@ -451,7 +451,7 @@ app.get("/Unzip/:path/:token", (req, res) => {
 app.get("/viewer/view/current/:token", (req, res) => {
     res.send(GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(req.params.token) + "/current_book/"));
 });
-app.get("/viewer/view/", (req, res) => {
+app.get("/viewer/view", (req, res) => {
     let param = replaceHTMLAdressPath(req.headers.path);
     let tosend = GetListOfImg(param);
     console.log(tosend);
@@ -1283,7 +1283,6 @@ app.post("/refreshMeta", async function (req, res) {
                     asso["Score"] = res2["meanScore"]
                     asso["genres"] = JSON.stringify(res2["genres"]).replaceAll("'", "''");
                     asso["TRENDING"] = JSON.stringify(res2["trending"]).replaceAll("'", "''");
-                    asso["API_ID"] = provider;
                     let columns = [];
                     let values = [];
                     for (let key in asso) {
@@ -1473,7 +1472,7 @@ app.get("/insert/marvel/book/", apiMarvelLimiter, async function (req, res) {
         }
         if (cdata["data"]["total"] > 0) {
             cdata = cdata["data"]["results"][0];
-            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"].replaceAll("'", "''")}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books")
+            await insertIntoDB("", `(${Math.floor(Math.random() * 100000)},'${cdata["id"]}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"] !== null ? cdata["description"].replaceAll("'", "''") : ""}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books")
             GETMARVELAPI_Creators(cdata["id"], "comics").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
@@ -1710,11 +1709,11 @@ async function GETMARVELAPI_SEARCH(name = "", date = "") {
     return await response.json();
 }
 
-app.post("/api/marvel", apiMarvelLimiter, (req, res) => {
+app.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
     let token = req.body.token;
     let name = req.body.name;
     let path = req.body.path;
-    API_MARVEL_GET(name).then(async function (data) {
+    await API_MARVEL_GET(name).then(async function (data) {
         let randID = Math.floor(Math.random() * 1000000);
         console.log(data);
         console.log(name);
@@ -1762,6 +1761,7 @@ app.post("/api/marvel", apiMarvelLimiter, (req, res) => {
     }).catch((err) => {
         console.log(err);
     })
+    res.sendStatus(200);
 })
 app.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
     let name = req.headers.name;
