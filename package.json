@@ -12,7 +12,8 @@
   "private": false,
   "scripts": {
     "serv": "nodemon server.js",
-    "swagger-gen" : "node swagger-gen.js"
+    "swagger-gen" : "node swagger-gen.js",
+    "serv_docker" : "node getFront.js && node server.js"
   },
   "devDependencies": {
     "swagger-ui-express": "5.0.0",

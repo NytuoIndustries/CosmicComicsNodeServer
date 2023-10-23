@@ -3,7 +3,7 @@ services:
   cosmiccomics:
     image: nytuo/cosmic_comics:2.0.0
     container_name: cosmiccomics
-    command: npm run serv
+    command: npm run serv_docker
     volumes:
       - /path/to/library/on/pc:/path/to/library/on/docker
       - .:/usr/app
