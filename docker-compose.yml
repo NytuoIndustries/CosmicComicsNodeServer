@@ -1,13 +1,14 @@
 version: "3.0"
 services:    
   cosmiccomics:
-    image: nytuo/cosmic_comics:2.0.0
+    image: nytuo/cosmic_comics:2.0.0 # Link to the official image
     container_name: cosmiccomics
     command: npm run serv
     volumes:
-      - /path/to/library/on/pc:/path/to/library/on/docker
+      - /path/to/library/on/pc:/path/to/library/on/docker # This is the path to the folder you want to have inside CosmicComics. You can add as many lines pointing to any distinct folder you want
       - .:/usr/app
       - /usr/app/node_modules
+      - /path/to/config/on/pc:/home/node/.config/CosmicComics/CosmicData # This is the path to the config folder containing the profiles and .env file.
     ports:
-      - 4696:4696
+      - 4696:4696 # Those are the ports used by CosmicComics, you may need to change only the left part since the right part is used by the server directly and may need more configuration and a custom image
     restart: unless-stopped
