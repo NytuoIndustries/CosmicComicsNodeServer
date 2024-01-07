@@ -107,6 +107,8 @@ const ValidatedExtensionImage = [
 ];
 let mangaMode = false;
 
+let statusProgress = {};
+
 
 //If the serverconfig.json doesn't exist, create it
 if (!fs.existsSync(CosmicComicsTemp + "/serverconfig.json")) {
@@ -759,6 +761,13 @@ app.get("/profile/login/:name/:passcode", accountLimiter, (req, res) => {
             }
             fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config));
             fs.mkdirSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/current_book", { recursive: true });
+            statusProgress[token] = {
+                "unzip": {
+                    "status": "waiting",
+                    "percentage": 0,
+                    "current_file": "",
+                },
+            };
             res.send(token);
         } else {
             res.send(false);
@@ -780,6 +789,11 @@ app.get("/profile/logcheck/:token", (req, res) => {
     }
     res.send(false);
 });
+
+app.get("/getStatus/:token/:type", (req, res) => {
+    res.send(statusProgress[req.params.token][req.params.type]);
+});
+
 app.post("/profile/logout/:token", (req, res) => {
     var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     var config = JSON.parse(configFile);
@@ -1879,7 +1893,22 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 $bin: Path27Zip
             });
             var resEnd;
+
+            Stream.on("progress", (progress) => {
+                statusProgress[token]["unzip"] = {
+                    "status": "loading",
+                    "percentage": progress.percent,
+                    "current_file": progress.file,
+                }
+                console.log(progress);
+            });
+
             Stream.on("end", async () => {
+                statusProgress[token]["unzip"] = {
+                    "status": "finish",
+                    "percentage": 100,
+                    "current_file": "",
+                }
                 listOfElements = fs.readdirSync(ExtractDir);
                 const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
                 const page = await browser.newPage();
@@ -1926,6 +1955,11 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 }
             });
             Stream.on("error", (err) => {
+                statusProgress[token]["unzip"] = {
+                    "status": "error",
+                    "percentage": 0,
+                    "current_file": "",
+                }
                 console.log("An error occured" + err);
             });
         } else if (ext === "pdf") {
@@ -2372,12 +2406,7 @@ app.get("/profile/getPPBN/:name", accountLimiter, (req, res) => {
 app.get("/profile/custo/getNumber", accountLimiter, (req, res) => {
     res.send({ "length": fs.readdirSync(__dirname + "/public/Images/account_default").length });
 });
-/*app.get("/api/marvel", (req, res) => {
-    let id = req.body.id
-    fetch("https://gateway.marvel.com:443/v1/public/series/" + id + "/comics?noVariants=false&orderBy=issueNumber&apikey=").then((e)=>{
-        res.send(e)
-    })
-})*/
+
 //Modifications of the profile
 app.post("/profile/modification", accountLimiter, (req, res) => {
     const token = resolveToken(req.body.token);
