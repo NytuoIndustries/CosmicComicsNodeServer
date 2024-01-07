@@ -413,17 +413,22 @@ app.get("/img/getPalette/:token", async (req, res) => {
         img = __dirname + "/public/Images/fileDefault.png";
     }
 
-    await getPalette(img).then(function (palette) {
-        let rgb = "rgb(" + palette[0][0] + "," + palette[0][1] + "," + palette[0][2] + ")";
-        let rgb2 = "rgb(" + palette[1][0] + "," + palette[1][1] + "," + palette[1][2] + ")";
-        if (tinycolor(rgb).isLight()) {
-            rgb = tinycolor(rgb).darken(45).toString();
-        }
-        if (tinycolor(rgb2).isLight()) {
-            rgb2 = tinycolor(rgb2).darken(45).toString();
-        }
-        res.send([rgb, rgb2]);
-    });
+    try {
+        await getPalette(img).then(function (palette) {
+            let rgb = "rgb(" + palette[0][0] + "," + palette[0][1] + "," + palette[0][2] + ")";
+            let rgb2 = "rgb(" + palette[1][0] + "," + palette[1][1] + "," + palette[1][2] + ")";
+            if (tinycolor(rgb).isLight()) {
+                rgb = tinycolor(rgb).darken(45).toString();
+            }
+            if (tinycolor(rgb2).isLight()) {
+                rgb2 = tinycolor(rgb2).darken(45).toString();
+            }
+            res.send([rgb, rgb2]);
+        });
+    } catch (error) {
+        res.send(["rgb(33,33,33)", "rgb(33,33,33)"]);
+    }
+
 });
 app.get("/profile/DLBDD/:token", (req, res) => {
     const token = resolveToken(req.params.token);
@@ -454,6 +459,7 @@ app.get("/viewer/view/current/:token", (req, res) => {
     res.send(GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(req.params.token) + "/current_book/"));
 });
 app.get("/viewer/view", (req, res) => {
+    console.log(req.headers.path);
     let param = replaceHTMLAdressPath(req.headers.path);
     let tosend = GetListOfImg(param);
     console.log(tosend);
@@ -791,6 +797,7 @@ app.get("/profile/logcheck/:token", (req, res) => {
 });
 
 app.get("/getStatus/:token/:type", (req, res) => {
+    console.log(statusProgress[req.params.token][req.params.type]);
     res.send(statusProgress[req.params.token][req.params.type]);
 });
 
@@ -1896,6 +1903,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
             var resEnd;
 
             Stream.on("progress", (progress) => {
+                console.log(progress);
                 statusProgress[token]["unzip"] = {
                     "status": "loading",
                     "percentage": progress.percent,
@@ -1970,12 +1978,30 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
             ls = spawn('convert', ['-density', '300', zipPath, ExtractDir + '/%d.jpg']);
             ls.stdout.on('data', (data) => {
                 console.log(`stdout: ${data}`);
+                statusProgress[token]["unzip"] = {
+                    "status": "loading",
+                    "percentage": 0,
+                    "current_file": ""
+                }
+                console.log(`stdout: ${data}`);
 
             });
             ls.stderr.on('data', (data) => {
+                statusProgress[token]["unzip"] = {
+                    "status": "error",
+                    "percentage": 0,
+                    "current_file": ""
+                }
                 console.log(`stderr: ${data}`);
             });
             ls.on('close', (code) => {
+
+                statusProgress[token]["unzip"] = {
+                    "status": "finish",
+                    "percentage": 100,
+                    "current_file": ""
+                }
+
                 console.log(`child process exited with code ${code}`);
                 listOfElements = GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
                 console.log("finish");
@@ -2023,7 +2049,23 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 $bin: Path27Zip
             });
             var resEnd;
+
+            Stream.on("progress", (progress) => {
+                console.log(progress);
+                statusProgress[token]["unzip"] = {
+                    "status": "loading",
+                    "percentage": progress.percent,
+                    "current_file": progress.file,
+                }
+                console.log(progress);
+            });
+
             Stream.on("end", () => {
+                statusProgress[token]["unzip"] = {
+                    "status": "finish",
+                    "percentage": 100,
+                    "current_file": "",
+                }
                 listOfElements = GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
                 console.log("finish");
                 var name1 = path.basename(zipPath);
@@ -2055,6 +2097,11 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 }
             });
             Stream.on("error", (err) => {
+                statusProgress[token]["unzip"] = {
+                    "status": "error",
+                    "percentage": 0,
+                    "current_file": "",
+                }
                 console.log("An error occured" + err);
             });
         } else if (ext == "rar" || ext == "cbr") {
@@ -2086,13 +2133,19 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                     }
                     return 0;
                 });
-                entries.forEach((file) => {
+                entries.forEach((file, index) => {
                     for (var i in file) {
                         if (i == "name") {
                             var currentName = file[i];
                             currentName = currentName.toString();
                             var stream = archive.stream(currentName);
-                            stream.on("error", console.error);
+                            stream.on("error", (err) => {
+                                statusProgress[token]["unzip"] = {
+                                    "status": "error",
+                                    "percentage": 0,
+                                    "current_file": "",
+                                }
+                            });
                             if (!fs.existsSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book")) {
                                 fs.mkdirSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
                             }
@@ -2110,12 +2163,22 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                                 stream.pipe(
                                     fs.createWriteStream(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book/" + name + ".jpg")
                                 );
+                                statusProgress[token]["unzip"] = {
+                                    "status": "loading",
+                                    "percentage": index / entries.length * 100,
+                                    "current_file": currentName,
+                                }
                                 n = parseInt(name) + 1;
                                 name = Array(5 - String(n).length + 1).join("0") + n;
                             }
                         }
                     }
                 });
+                statusProgress[token]["unzip"] = {
+                    "status": "finish",
+                    "percentage": 100,
+                    "current_file": "",
+                }
                 /*postunrar();*/
             });
         } else {
