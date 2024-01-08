@@ -6,6 +6,7 @@ var apiAnilistLimiter = RateLimit({
     max: 90
 });
 const { API_ANILIST_GET, API_ANILIST_GET_SEARCH } = require("../api/Anilist");
+const { insertIntoDB } = require("../utils/Database");
 router.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
     let name = req.headers.name;
     let token = req.headers.token;

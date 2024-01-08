@@ -5,12 +5,11 @@ var accountLimiter = RateLimit({
     windowMs: 1 * 60 * 1000 * 60,
     max: 100,
 });
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 const { resolveToken, tokena, changePermissionForFilesInFolder } = require("../utils/Utils");
 const fs = require("fs");
 const path = require("path");
 const { makeDB, getDB, disableOpenedDB } = require("../utils/Database");
-const { root } = require("../server");
+const { root, CosmicComicsTemp } = require("../server");
 router.get("/profile/logcheck/:token", (req, res) => {
     var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     var config = JSON.parse(configFile);

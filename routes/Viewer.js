@@ -1,6 +1,6 @@
 const express = require("express");
 let router = express.Router();
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { CosmicComicsTemp } = require("../server");
 const { replaceHTMLAdressPath, resolveToken, GetListOfImg } = require("../utils/Utils");
 const fs = require("fs");
 router.get("/viewer/view/current/:token", (req, res) => {

@@ -1,9 +1,8 @@
 express = require("express");
 router = express.Router();
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 const fs = require("fs");
 const { changePermissionForFilesInFolder, resolveToken } = require("../utils/Utils");
-const root = require("../server").root;
+const { root, CosmicComicsTemp } = require("../server");
 const makeDB = require("../utils/Database").makeDB;
 const path = require("path");
 router.post("/configServ/:name/:passcode/:port", (req, res) => {

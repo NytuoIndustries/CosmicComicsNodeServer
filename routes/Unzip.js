@@ -1,6 +1,6 @@
 const express = require("express");
 let router = express.Router();
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { CosmicComicsTemp } = require("../server");
 const { replaceHTMLAdressPath, resolveToken } = require("../utils/Utils");
 const path = require("path");
 const { UnZip, getStatusProgress } = require("../utils/Unzipper");
@@ -32,4 +32,8 @@ router.get("/Unzip/:path/:token", (req, res) => {
     }, 1000);
 });
 
-module.exports = router;
+module.exports = {
+    router,
+    SendTo,
+    currentBookPath
+}

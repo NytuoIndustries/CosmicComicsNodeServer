@@ -1,6 +1,6 @@
 const express = require("express");
 let router = express.Router();
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { CosmicComicsTemp } = require("../server");
 const { UpdateDB, getDB } = require("../utils/Database");
 const { resolveToken } = require("../utils/Utils");
 const { GETMARVELAPI_Comics_ByID, GETMARVELAPI_Series_ByID } = require("../api/Marvel");

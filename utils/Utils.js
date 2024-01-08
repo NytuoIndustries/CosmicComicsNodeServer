@@ -1,13 +1,14 @@
 const fs = require("fs");
 const { root, CosmicComicsTemp } = require("../server");
 var rand = function () {
-    return Math.random().toString(36).substr(2); // remove `0.`
+    return Math.random().toString(36).substring(2); // remove `0.`
 };
 var tokena = function () {
     return rand() + rand(); // to make it longer
 };
 let mangaMode = false;
-
+const { unzip_first } = require("./Unzipper");
+const { getDB, UpdateDB } = require("./Database");
 const ValidatedExtensionImage = [
     "png",
     "jpg",
@@ -116,7 +117,7 @@ function fillBlankImages(token) {
     //get the null, "null", "undefined", blank cover or BannerImage from the books DB
     try {
         let result = [];
-        Database.getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
+        getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
             if (err) return console.log("Error getting element", err);
             resD.forEach((row) => {
                 console.log(row);
@@ -126,12 +127,12 @@ function fillBlankImages(token) {
                 console.log("Beggining fillBlankImages for : " + book.NOM);
                 let filename = book.ID_book;
                 try {
-                    Unzip.zip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
+                    unzip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
                     await changePermissionForFilesInFolder(root + "/public/FirstImagesOfAll/");
                     /*
                                         let newpath = await WConv(filename + ".jpg");
                     */
-                    Database.UpdateDB("noedit", "URLCover", "'" + root + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
+                    UpdateDB("noedit", "URLCover", "'" + root + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
                 } catch (e) {
                     console.log("NOT SUPPORTED");
                 }

@@ -116,7 +116,7 @@ const GoogleR = require("./routes/GoogleBooks");
 const Viewer = require("./routes/Viewer");
 const Database = require("./routes/Database");
 const OLR = require("./routes/OpenLibrary");
-const Unzip = require("./routes/Unzip");
+const unzipR = require("./routes/Unzip").router;
 
 
 app.use("/", general);
@@ -128,7 +128,7 @@ app.use("/", GoogleR);
 app.use("/", Viewer);
 app.use("/", Database);
 app.use("/", OLR);
-app.use("/", Unzip);
+app.use("/", unzipR);
 
 
 setInterval(() => {

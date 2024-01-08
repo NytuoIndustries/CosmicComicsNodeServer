@@ -1,4 +1,3 @@
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 let statusProgress = {};
 const fs = require("fs");
 const SevenBin = require("7zip-bin");
@@ -7,9 +6,10 @@ const Path27Zip = SevenBin.path7za;
 const unrarBin = require("unrar-binaries");
 const Unrar = require("unrar");
 const puppeteer = require("puppeteer");
-const { root } = require("../server");
+const { root, CosmicComicsTemp } = require("../server");
 const { GetElFromInforPath, GetListOfImg, resolveToken } = require("./Utils");
 const { getDB, } = require("./Database");
+const { SendTo } = require("../routes/Unzip");
 function initStatusProgress(token) {
     statusProgress[token] = {
         "unzip": {

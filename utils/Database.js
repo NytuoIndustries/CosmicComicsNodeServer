@@ -1,4 +1,4 @@
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { CosmicComicsTemp } = require("../server");
 let openedDB = new Map();
 let sqlite3 = require("sqlite3");
 
