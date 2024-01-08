@@ -1,13 +1,25 @@
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 const fs = require("fs");
-const { root } = require("../server");
+const { root, CosmicComicsTemp } = require("../server");
 var rand = function () {
     return Math.random().toString(36).substr(2); // remove `0.`
 };
 var tokena = function () {
     return rand() + rand(); // to make it longer
 };
+let mangaMode = false;
 
+const ValidatedExtensionImage = [
+    "png",
+    "jpg",
+    "jpeg",
+    "bmp",
+    "apng",
+    "svg",
+    "ico",
+    "webp",
+    "gif",
+    "tiff",
+];
 /**
  * Check if the passed param has number in it
  * @param {string} toCheck
@@ -74,6 +86,7 @@ function GetElFromInforPath(search, info) {
     }
     return null;
 }
+const webp = require('webp-converter');
 
 async function WConv(file) {
     try {

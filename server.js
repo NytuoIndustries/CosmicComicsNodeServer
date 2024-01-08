@@ -3,26 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 const os = require("os");
-const tinycolor = require("tinycolor2");
-const { getColor, getPalette } = require('color-extr-thief');
-const webp = require('webp-converter');
-let CryptoJS = require("crypto-js");
 app.use("", express.static(__dirname + "/public"));
-var RateLimit = require('express-rate-limit');
-let DLBOOKPATH = "";
-var currentBookPath = "";
-var SendToUnZip = "";
-
-
-var limiterDefault = RateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 1000
-});
-
-var viewerLimiter = RateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 20000,
-});
 
 const isPortable = fs.existsSync(path.join(__dirname, "portable.txt"));
 const isElectron = fs.existsSync(path.join(__dirname, 'portable.txt')) && fs.readFileSync(path.join(__dirname, "portable.txt"), "utf8") === "electron";
@@ -65,35 +46,6 @@ module.exports = {
     root
 };
 
-let sqlite3 = require("sqlite3");
-const anilist = require("anilist-node");
-const AniList = new anilist();
-const ValidatedExtension = [
-    "cbr",
-    "cbz",
-    "pdf",
-    "zip",
-    "7z",
-    "cb7",
-    "rar",
-    "tar",
-    "cbt",
-    "epub",
-    "ebook"
-];
-const ValidatedExtensionImage = [
-    "png",
-    "jpg",
-    "jpeg",
-    "bmp",
-    "apng",
-    "svg",
-    "ico",
-    "webp",
-    "gif",
-    "tiff",
-];
-let mangaMode = false;
 const changePermissionForFilesInFolder = require("./utils/Utils").changePermissionForFilesInFolder;
 
 //If the serverconfig.json doesn't exist, create it
@@ -122,9 +74,6 @@ try {
     console.log(e);
 }
 const cors = require('cors');
-const { spawn } = require('child_process');
-const puppeteer = require("puppeteer");
-const { randomUUID } = require("crypto");
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -197,11 +146,6 @@ setInterval(() => {
         fs.rmSync(__dirname + "/public/TODL", { recursive: true, force: true });
     }
 }, 2 * 60 * 60 * 1000);
-
-function SendTo(val) {
-    console.log("sendto => " + val);
-    SendToUnZip = val;
-}
 
 process.on('SIGINT', () => {
     console.log('SIGINT signal received: closing server');

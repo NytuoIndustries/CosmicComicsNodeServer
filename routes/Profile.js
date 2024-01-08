@@ -10,6 +10,7 @@ const { resolveToken, tokena, changePermissionForFilesInFolder } = require("../u
 const fs = require("fs");
 const path = require("path");
 const { makeDB, getDB, disableOpenedDB } = require("../utils/Database");
+const { root } = require("../server");
 router.get("/profile/logcheck/:token", (req, res) => {
     var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     var config = JSON.parse(configFile);

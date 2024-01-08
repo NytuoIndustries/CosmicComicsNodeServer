@@ -1,5 +1,6 @@
 let MarvelPublicKey = process.env.MARVEL_PUBLIC_KEY;
 let MarvelPrivateKey = process.env.MARVEL_PRIVATE_KEY;
+let CryptoJS = require("crypto-js");
 
 async function API_MARVEL_GET(name = "") {
     console.log("API_MARVEL_GET: " + name);

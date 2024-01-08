@@ -4,7 +4,12 @@ const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 const { replaceHTMLAdressPath, resolveToken } = require("../utils/Utils");
 const path = require("path");
 const { UnZip, getStatusProgress } = require("../utils/Unzipper");
-
+var currentBookPath = "";
+var SendToUnZip = "";
+function SendTo(val) {
+    console.log("sendto => " + val);
+    SendToUnZip = val;
+}
 router.get("/getStatus/:token/:type", (req, res) => {
     res.send(getStatusProgress(req.params.token, req.params.type));
 });

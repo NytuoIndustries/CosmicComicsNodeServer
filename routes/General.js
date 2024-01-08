@@ -1,10 +1,8 @@
 const express = require("express");
 let router = express.Router();
-const CosmicComicsTemp = require("../server").CosmicComicsTemp;
 router.get('/getVersion', (_req, res) => {
     res.send(process.env.npm_package_version);
 });
-const serverl = require("../server");
 const { getColor, getPalette } = require('color-extr-thief');
 const fs = require("fs");
 const SevenBin = require("7zip-bin");
@@ -12,7 +10,11 @@ const Seven = require("node-7z");
 const Path27Zip = SevenBin.path7za;
 const { spawn } = require('child_process');
 const { replaceHTMLAdressPath, resolveToken, fillBlankImages } = require("../utils/Utils");
-const { root } = require("../server");
+const { root, CosmicComicsTemp } = require("../server");
+const { getDB } = require("../utils/Database");
+const tinycolor = require("tinycolor2");
+
+let DLBOOKPATH = "";
 router.get("/getListOfFolder/:path", (req, res) => {
     var dir = req.params.path;
     dir = replaceHTMLAdressPath(dir);
@@ -51,7 +53,7 @@ router.get("/null", function (_req, res) {
 });
 
 router.get("/dirname", (_req, res) => {
-    res.send(path2Data);
+    res.send(root);
 });
 router.get("/CosmicDataLoc", (_req, res) => {
     res.send(CosmicComicsTemp);
@@ -103,7 +105,7 @@ router.get("/img/getPalette/:token", async (req, res) => {
 
 const multer = require("multer");
 
-const upload = multer({ dest: serverl.CosmicComicsTemp + "/uploads/" });
+const upload = multer({ dest: CosmicComicsTemp + "/uploads/" });
 
 router.post("/uploadComic", upload.single("ComicTemp"), function (req, res) {
     let file = req.file;
@@ -144,7 +146,7 @@ router.get("/BM/getBM", (req, res) => {
     try {
         var result = [];
         const token = resolveToken(req.headers.token);
-        Database.getDB(token).all("SELECT * FROM Bookmarks;", function (err, resD) {
+        getDB(token).all("SELECT * FROM Bookmarks;", function (err, resD) {
             if (err) return console.log("Error getting element", err);
             resD.forEach((row) => {
                 result.push(row);
