@@ -1,49 +1,29 @@
-const express = require("express");
+let express = require("express");
 const fs = require("fs");
 const path = require("path");
-const multer = require("multer");
 const app = express();
-const SevenBin = require("7zip-bin");
-const unrarBin = require("unrar-binaries");
 const os = require("os");
 const tinycolor = require("tinycolor2");
-let Unrar = require("unrar");
-const Seven = require("node-7z");
 const { getColor, getPalette } = require('color-extr-thief');
-const Path27Zip = SevenBin.path7za;
 const webp = require('webp-converter');
 let CryptoJS = require("crypto-js");
 app.use("", express.static(__dirname + "/public"));
 var RateLimit = require('express-rate-limit');
-const utils = require("./utils/utils.js");
 let DLBOOKPATH = "";
 var currentBookPath = "";
 var SendToUnZip = "";
-var apiAnilistLimiter = RateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 90
-});
-var apiMarvelLimiter = RateLimit({
-    //for a day
-    windowMs: 1 * 60 * 1000 * 60 * 24,
-    max: 3000
-});
+
+
 var limiterDefault = RateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 1000
 });
-var apiGoogleLimiter = RateLimit({
-    windowMs: 1 * 100 * 1000,
-    max: 100
-})
+
 var viewerLimiter = RateLimit({
     windowMs: 1 * 60 * 1000,
     max: 20000,
-})
-var accountLimiter = RateLimit({
-    windowMs: 1 * 60 * 1000 * 60,
-    max: 100,
-})
+});
+
 const isPortable = fs.existsSync(path.join(__dirname, "portable.txt"));
 const isElectron = fs.existsSync(path.join(__dirname, 'portable.txt')) && fs.readFileSync(path.join(__dirname, "portable.txt"), "utf8") === "electron";
 let devMode = false;
@@ -79,8 +59,12 @@ const dotenv = require('dotenv');
 dotenv.config({
     path: CosmicComicsTemp + "/.env"
 });
-let MarvelPublicKey = process.env.MARVEL_PUBLIC_KEY;
-let MarvelPrivateKey = process.env.MARVEL_PRIVATE_KEY;
+var root = __dirname;
+module.exports = {
+    CosmicComicsTemp,
+    root
+};
+
 let sqlite3 = require("sqlite3");
 const anilist = require("anilist-node");
 const AniList = new anilist();
@@ -110,7 +94,7 @@ const ValidatedExtensionImage = [
     "tiff",
 ];
 let mangaMode = false;
-let statusProgress = {};
+const changePermissionForFilesInFolder = require("./utils/Utils").changePermissionForFilesInFolder;
 
 //If the serverconfig.json doesn't exist, create it
 if (!fs.existsSync(CosmicComicsTemp + "/serverconfig.json")) {
@@ -128,7 +112,6 @@ if (!fs.existsSync(CosmicComicsTemp + "/serverconfig.json")) {
         fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), { encoding: 'utf8' });
     }
 }
-const upload = multer({ dest: CosmicComicsTemp + "/uploads/" });
 
 try {
     if (!fs.existsSync(__dirname + "/public/FirstImagesOfAll")) {
@@ -142,9 +125,6 @@ const cors = require('cors');
 const { spawn } = require('child_process');
 const puppeteer = require("puppeteer");
 const { randomUUID } = require("crypto");
-
-let openedDB = new Map();
-
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -172,20 +152,41 @@ const server = app.listen(port, "0.0.0.0", function () {
     port = this.address().port;
     console.log("Listening on port %s:%s!", host, port);
 });
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
 });
 
 
-const general = require("./routes/general");
+const general = require("./routes/General");
+const config = require("./routes/Config");
+const profile = require("./routes/Profile");
+const AniListR = require("./routes/AniList");
+const MarvelR = require("./routes/Marvel");
+const GoogleR = require("./routes/GoogleBooks");
+const Viewer = require("./routes/Viewer");
+const Database = require("./routes/Database");
+const OLR = require("./routes/OpenLibrary");
+const Unzip = require("./routes/Unzip");
+
+
 app.use("/", general);
+app.use("/", config);
+app.use("/", profile);
+app.use("/", AniListR);
+app.use("/", MarvelR);
+app.use("/", GoogleR);
+app.use("/", Viewer);
+app.use("/", Database);
+app.use("/", OLR);
+app.use("/", Unzip);
+
 
 setInterval(() => {
     console.log("Resetting Tokens");
     var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     var config = JSON.parse(configFile);
-    for (var i in config) {
+    for (var _i in config) {
         config["Token"] = {};
     }
     fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config));
@@ -220,7 +221,7 @@ process.on('SIGINT', () => {
 //REACT ROUTER
 console.log("REACT ROUTER : ", process.env.ENABLE_REACT_ROUTER);
 if (process.env.ENABLE_REACT_ROUTER === "true") {
-    app.use((req, res, next) => {
+    app.use((_req, res, _next) => {
         if (fs.existsSync(__dirname + "/public/index.html")) {
             res.sendFile(path.join(__dirname, "public", "index.html"));
         } else {
@@ -243,3 +244,4 @@ app.all('*', (req, res) => {
     }
     res.send("This server cannot handle this request");
 });
+

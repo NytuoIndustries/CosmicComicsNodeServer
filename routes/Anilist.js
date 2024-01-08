@@ -1,7 +1,11 @@
-const express = require('express');
-const router = express.Router();
-
-
+const express = require("express");
+var RateLimit = require('express-rate-limit');
+let router = express.Router();
+var apiAnilistLimiter = RateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 90
+});
+const { API_ANILIST_GET, API_ANILIST_GET_SEARCH } = require("../api/Anilist");
 router.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
     let name = req.headers.name;
     let token = req.headers.token;
@@ -22,9 +26,9 @@ router.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
         for (let i = 0; i < staffData.length; i++) {
             try {
                 if (staffData[i]["description"] == null) {
-                    await insertIntoDB("", `('${staffData[i]["id"] + "_2"}','${staffData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(staffData[i]["image"]["medium"])}','${null}','${JSON.stringify(staffData[i]["siteUrl"])}')`, token, "Creators")
+                    await insertIntoDB("", `('${staffData[i]["id"] + "_2"}','${staffData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(staffData[i]["image"]["medium"])}','${null}','${JSON.stringify(staffData[i]["siteUrl"])}')`, token, "Creators");
                 } else {
-                    await insertIntoDB("", `('${staffData[i]["id"] + "_2"}','${staffData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(staffData[i]["image"]["medium"])}','${JSON.stringify(staffData[i]["description"].replaceAll("'", "''"))}','${JSON.stringify(staffData[i]["siteUrl"])}')`, token, "Creators")
+                    await insertIntoDB("", `('${staffData[i]["id"] + "_2"}','${staffData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(staffData[i]["image"]["medium"])}','${JSON.stringify(staffData[i]["description"].replaceAll("'", "''"))}','${JSON.stringify(staffData[i]["siteUrl"])}')`, token, "Creators");
                 }
             } catch (e) {
                 console.log(e);
@@ -33,9 +37,9 @@ router.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
         for (let i = 0; i < charactersData.length; i++) {
             try {
                 if (charactersData[i]["description"] == null) {
-                    await insertIntoDB("", `('${charactersData[i]["id"] + "_2"}','${charactersData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(charactersData[i]["image"]["medium"])}','${null}','${JSON.stringify(charactersData[i]["siteUrl"])}')`, token, "Characters")
+                    await insertIntoDB("", `('${charactersData[i]["id"] + "_2"}','${charactersData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(charactersData[i]["image"]["medium"])}','${null}','${JSON.stringify(charactersData[i]["siteUrl"])}')`, token, "Characters");
                 } else {
-                    await insertIntoDB("", `('${charactersData[i]["id"] + "_2"}','${charactersData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(charactersData[i]["image"]["medium"])}','${JSON.stringify(charactersData[i]["description"].replaceAll("'", "''"))}','${JSON.stringify(charactersData[i]["siteUrl"])}')`, token, "Characters")
+                    await insertIntoDB("", `('${charactersData[i]["id"] + "_2"}','${charactersData[i]["name"]["full"].replaceAll("'", "''")}','${JSON.stringify(charactersData[i]["image"]["medium"])}','${JSON.stringify(charactersData[i]["description"].replaceAll("'", "''"))}','${JSON.stringify(charactersData[i]["siteUrl"])}')`, token, "Characters");
                 }
             } catch (e) {
                 console.log(e);
@@ -51,53 +55,16 @@ router.post("/api/anilist", apiAnilistLimiter, async (req, res) => {
                 console.log("inserted");
             }
         }
-    })
-    res.sendStatus(200)
+    });
+    res.sendStatus(200);
 });
 
 router.get("/api/anilist/searchOnly/:name", apiAnilistLimiter, (req, res) => {
     let name = req.params.name;
     API_ANILIST_GET_SEARCH(name).then(async function (dataa) {
         res.send(dataa);
-    })
+    });
 });
 
-router.post("/insert/anilist/book", apiAnilistLimiter, function (req, res) {
-    let token = req.body.token;
-    let path = req.body.path;
-    let realname = req.body.realname;
-    try {
-        let data = [];
-        getDB(resolveToken(token)).all("SELECT title FROM Series;", function (err, resD) {
-            if (err) return console.log("Error getting element", err);
-            resD.forEach((row) => {
-                data.push(row);
-            });
-            let SerieName = "";
-            for (let i = 0; i < data.length; i++) {
-                let el = JSON.parse(data[i].title);
-                path.split("/").forEach((ele) => {
-                    if (ele === el.english || ele === el.romaji || ele === el.native) {
-                        if (el.english != null) {
-                            SerieName = el.english;
-                        } else if (el.romaji != null) {
-                            SerieName = el.romaji;
-                        } else if (el.native != null) {
-                            SerieName = el.native;
-                        } else {
-                            SerieName = el.english;
-                        }
-                    }
-                });
-                if (SerieName !== "") {
-                    break;
-                }
-            }
-            insertIntoDB("", `('${Math.floor(Math.random() * 100000) + "_2"}','${2}','${realname}',${null},${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${"Anilist_" + realname.replaceAll(" ", "$") + "_" + SerieName.replaceAll(" ", "$")}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
-        });
-    } catch (e) {
-        console.log(e);
-    }
-})
 
 module.exports = router;

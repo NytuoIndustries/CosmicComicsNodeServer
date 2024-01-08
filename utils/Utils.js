@@ -1,3 +1,6 @@
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const fs = require("fs");
+const { root } = require("../server");
 var rand = function () {
     return Math.random().toString(36).substr(2); // remove `0.`
 };
@@ -48,7 +51,7 @@ function GetTheName(CommonName = "") {
 async function changePermissionForFilesInFolder(folderPath) {
     fs.chmodSync(folderPath, 0o777);
     console.log("chmod 777 for " + folderPath);
-    fs.readdirSync(folderPath, (err, files) => {
+    fs.readdirSync(folderPath, (_err, files) => {
         files.forEach((file) => {
             fs.chmodSync(folderPath + "/" + file, 0o777);
             console.log("chmod 777 for " + folderPath + "/" + file);
@@ -78,29 +81,29 @@ async function WConv(file) {
     } catch (error) {
         console.log("WEBP CONVERTER ERROR: " + error);
     }
-    let oldfile = __dirname + "/public/FirstImagesOfAll/" + file;
-    let newfile = __dirname + "/public/FirstImagesOfAll/" + path.basename(file) + ".webp";
+    let oldfile = root + "/public/FirstImagesOfAll/" + file;
+    let newfile = root + "/public/FirstImagesOfAll/" + path.basename(file) + ".webp";
     try {
         if (path.extname(file) !== ".webp") {
             await webp
-                .cwebp(oldfile, newfile, "-q 80 -noalpha -resize 250 380", (logging = "-v"))
+                .cwebp(oldfile, newfile, "-q 80 -noalpha -resize 250 380")
                 .then((response) => {
                     console.log(response);
                     fs.rmSync(oldfile);
-                })
-            return newfile
+                });
+            return newfile;
         }
     } catch (error) {
         console.log(error);
     }
-    return newfile
+    return newfile;
 }
 
 function fillBlankImages(token) {
     //get the null, "null", "undefined", blank cover or BannerImage from the books DB
     try {
         let result = [];
-        getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
+        Database.getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
             if (err) return console.log("Error getting element", err);
             resD.forEach((row) => {
                 console.log(row);
@@ -108,14 +111,14 @@ function fillBlankImages(token) {
             });
             for (const book of result) {
                 console.log("Beggining fillBlankImages for : " + book.NOM);
-                let filename = book.ID_book
+                let filename = book.ID_book;
                 try {
-                    unzip_first(book.PATH, __dirname + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
-                    await changePermissionForFilesInFolder(__dirname + "/public/FirstImagesOfAll/");
+                    Unzip.zip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
+                    await changePermissionForFilesInFolder(root + "/public/FirstImagesOfAll/");
                     /*
                                         let newpath = await WConv(filename + ".jpg");
                     */
-                    UpdateDB("noedit", "URLCover", "'" + __dirname + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
+                    Database.UpdateDB("noedit", "URLCover", "'" + root + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
                 } catch (e) {
                     console.log("NOT SUPPORTED");
                 }
@@ -143,7 +146,7 @@ function GetListOfImg(dirPath) {
             }
         });
         if (mangaMode == true) {
-            return invertList(listOfImage);
+            return listOfImage.reverse();
         } else {
             if (listOfImage.length == 0) {
                 return false;
@@ -159,7 +162,7 @@ function GetListOfImg(dirPath) {
 function resolveToken(token) {
     let configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     let config = JSON.parse(configFile);
-    for (let i in config) {
+    for (let _i in config) {
         for (let j in config["Token"]) {
             if (config["Token"][j] === token) {
                 return j;
@@ -167,3 +170,16 @@ function resolveToken(token) {
         }
     }
 }
+
+module.exports = {
+    tokena,
+    GetElFromInforPath,
+    GetTheName,
+    hasNumbers,
+    replaceHTMLAdressPath,
+    WConv,
+    fillBlankImages,
+    GetListOfImg,
+    resolveToken,
+    changePermissionForFilesInFolder,
+};

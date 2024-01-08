@@ -1,6 +1,13 @@
-const express = require('express');
-const router = express.Router();
+const express = require("express");
+let router = express.Router();
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { replaceHTMLAdressPath, resolveToken } = require("../utils/Utils");
+const path = require("path");
+const { UnZip, getStatusProgress } = require("../utils/Unzipper");
 
+router.get("/getStatus/:token/:type", (req, res) => {
+    res.send(getStatusProgress(req.params.token, req.params.type));
+});
 
 router.get("/Unzip/:path/:token", (req, res) => {
     const token = req.params.token;

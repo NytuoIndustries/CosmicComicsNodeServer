@@ -23,3 +23,8 @@ async function GETGBAPI_Comics_ByID(id) {
     console.log(data);
     return data;
 }
+
+module.exports = {
+    GETGOOGLEAPI_book,
+    GETGBAPI_Comics_ByID
+};

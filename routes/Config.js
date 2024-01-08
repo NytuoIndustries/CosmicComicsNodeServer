@@ -1,11 +1,15 @@
-const express = require('express');
-const router = express.Router();
-
+express = require("express");
+router = express.Router();
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const fs = require("fs");
+const { changePermissionForFilesInFolder, resolveToken } = require("../utils/Utils");
+const root = require("../server").root;
+const makeDB = require("../utils/Database").makeDB;
+const path = require("path");
 router.post("/configServ/:name/:passcode/:port", (req, res) => {
     console.log("creating user");
     const name = req.params.name;
     const passcode = req.params.passcode;
-    const portServ = req.params.port;
     fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, { recursive: true });
     changePermissionForFilesInFolder(CosmicComicsTemp + "/profiles/" + name);
     console.log("Creating dir " + name);
@@ -49,17 +53,17 @@ router.post("/configServ/:name/:passcode/:port", (req, res) => {
             JSON.stringify(obj, null, 2), { encoding: "utf8" }
         );
     }
-    let random = Math.floor(Math.random() * (fs.readdirSync(__dirname + "/public/Images/account_default/").length - 1) + 1);
-    fs.copyFileSync(__dirname + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
+    let random = Math.floor(Math.random() * (fs.readdirSync(root + "/public/Images/account_default/").length - 1) + 1);
+    fs.copyFileSync(root + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     makeDB(name);
     console.log("User created");
     res.sendStatus(200);
 });
 router.get("/getThemes", (req, res) => {
-    var oi = fs.readdirSync(__dirname + "/public/themes");
+    var oi = fs.readdirSync(root + "/public/themes");
     let result = [];
     oi.forEach((el) => {
-        result.push(el, path.basename(__dirname + "/public/themes/" + el).split(".")[0]);
+        result.push(el, path.basename(root + "/public/themes/" + el).split(".")[0]);
     });
     res.send(result);
 });
@@ -71,7 +75,7 @@ router.post('/config/writeConfig/:token', (req, res) => {
 });
 
 router.get("/themes/read/:jsonFile", (req, res) => {
-    res.send(fs.readFileSync(__dirname + "/public/themes/" + req.params.jsonFile));
+    res.send(fs.readFileSync(root + "/public/themes/" + req.params.jsonFile));
 });
 router.get("/config/getConfig/:token", (req, res) => {
     const token = resolveToken(req.params.token);

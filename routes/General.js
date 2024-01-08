@@ -1,11 +1,18 @@
-const express = require('express');
-const router = express.Router();
-
-
-router.get('/getVersion', (req, res) => {
+const express = require("express");
+let router = express.Router();
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+router.get('/getVersion', (_req, res) => {
     res.send(process.env.npm_package_version);
 });
-
+const serverl = require("../server");
+const { getColor, getPalette } = require('color-extr-thief');
+const fs = require("fs");
+const SevenBin = require("7zip-bin");
+const Seven = require("node-7z");
+const Path27Zip = SevenBin.path7za;
+const { spawn } = require('child_process');
+const { replaceHTMLAdressPath, resolveToken, fillBlankImages } = require("../utils/Utils");
+const { root } = require("../server");
 router.get("/getListOfFolder/:path", (req, res) => {
     var dir = req.params.path;
     dir = replaceHTMLAdressPath(dir);
@@ -39,30 +46,27 @@ router.get("/getListOfFilesAndFolders/:path", (req, res) => {
     res.send(result);
 });
 
-router.get("/null", function (req, res) {
-    res.sendFile(__dirname + "/public/Images/fileDefault.png");
+router.get("/null", function (_req, res) {
+    res.sendFile(root + "/public/Images/fileDefault.png");
 });
 
-router.get("/dirname", (req, res) => {
+router.get("/dirname", (_req, res) => {
     res.send(path2Data);
 });
-router.get("/CosmicDataLoc", (req, res) => {
+router.get("/CosmicDataLoc", (_req, res) => {
     res.send(CosmicComicsTemp);
 });
 
 router.get("/lang/:lang", (req, res) => {
-    res.send(fs.readFileSync(__dirname + "/languages/" + req.params.lang + ".json"));
+    res.send(fs.readFileSync(root + "/languages/" + req.params.lang + ".json"));
 });
 
 router.post("/fillBlankImage", (req, res) => {
     let token = req.body.token;
     fillBlankImages(token);
     res.sendStatus(200);
-})
-router.get("/getStatus/:token/:type", (req, res) => {
-    console.log(statusProgress[req.params.token][req.params.type]);
-    res.send(statusProgress[req.params.token][req.params.type]);
 });
+
 router.get("/img/getColor/:img/:token", async (req, res) => {
     const token = resolveToken(req.params.token);
     var img = CosmicComicsTemp + "/profiles/" + token + "/current_book/" + req.params.img;
@@ -70,14 +74,13 @@ router.get("/img/getColor/:img/:token", async (req, res) => {
     res.send(dominantColor);
 });
 router.get("/img/getPalette/:token", async (req, res) => {
-    const token = resolveToken(req.params.token);
     console.log(req.headers.img);
     let img = req.headers.img;
     if (img.includes("localhost:" + port)) {
         img = 'public/' + img.split("localhost:" + port)[1];
     }
     if (img.includes("fileDefault")) {
-        img = __dirname + "/public/Images/fileDefault.png";
+        img = root + "/public/Images/fileDefault.png";
     }
 
     try {
@@ -98,12 +101,16 @@ router.get("/img/getPalette/:token", async (req, res) => {
 
 });
 
+const multer = require("multer");
+
+const upload = multer({ dest: serverl.CosmicComicsTemp + "/uploads/" });
+
 router.post("/uploadComic", upload.single("ComicTemp"), function (req, res) {
     let file = req.file;
     console.log(file);
     fs.renameSync(file.path, CosmicComicsTemp + "/uploads/" + file.originalname);
     res.sendStatus(200);
-})
+});
 
 
 router.post("/DL", function (req, res) {
@@ -111,13 +118,13 @@ router.post("/DL", function (req, res) {
     DLBOOKPATH = req.body.path;
     res.sendStatus(200);
 });
-router.get("/getDLBook", function (req, res) {
+router.get("/getDLBook", function (_req, res) {
     if (DLBOOKPATH === "") {
         res.sendStatus(404);
     } else if (fs.existsSync(DLBOOKPATH) && !fs.statSync(DLBOOKPATH).isDirectory()) {
         res.download(DLBOOKPATH);
     } else if (fs.statSync(DLBOOKPATH).isDirectory()) {
-        const compress = Seven.add(__dirname + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip", DLBOOKPATH, {
+        const compress = Seven.add(root + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip", DLBOOKPATH, {
             recursive: true,
             $bin: Path27Zip
         });
@@ -126,7 +133,7 @@ router.get("/getDLBook", function (req, res) {
         });
         compress.on("end", () => {
             console.log("Compressed");
-            res.download(__dirname + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip");
+            res.download(root + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip");
         });
     } else {
         res.sendStatus(404);
@@ -137,7 +144,7 @@ router.get("/BM/getBM", (req, res) => {
     try {
         var result = [];
         const token = resolveToken(req.headers.token);
-        getDB(token).all("SELECT * FROM Bookmarks;", function (err, resD) {
+        Database.getDB(token).all("SELECT * FROM Bookmarks;", function (err, resD) {
             if (err) return console.log("Error getting element", err);
             resD.forEach((row) => {
                 result.push(row);
@@ -153,7 +160,7 @@ router.post("/downloadBook", function (req, res) {
     if (fs.existsSync(CosmicComicsTemp + "/downloads") === false) {
         fs.mkdirSync(CosmicComicsTemp + "/downloads");
     }
-    const python = spawn("python", [__dirname + "/external_scripts/bookDownloader.py", req.body.url, CosmicComicsTemp + "/downloads/" + req.body.name + "/" + req.body.vol]);
+    const python = spawn("python", [root + "/external_scripts/bookDownloader.py", req.body.url, CosmicComicsTemp + "/downloads/" + req.body.name + "/" + req.body.vol]);
     python.stdout.on('data', (data) => {
         console.log(data.toString());
     });

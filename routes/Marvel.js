@@ -1,6 +1,13 @@
-const express = require('express');
-const router = express.Router();
-
+const express = require("express");
+var RateLimit = require('express-rate-limit');
+let router = express.Router();
+var apiMarvelLimiter = RateLimit({
+    //for a day
+    windowMs: 1 * 60 * 1000 * 60 * 24,
+    max: 3000
+});
+const { API_MARVEL_GET, GETMARVELAPI_Creators, GETMARVELAPI_Characters, GETMARVELAPI_variants, GETMARVELAPI_relations, GETMARVELAPI_SEARCH, GETMARVELAPI_Comics } = require("../api/Marvel");
+const { insertIntoDB } = require("../utils/Database");
 router.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
     let token = req.body.token;
     let name = req.body.name;
@@ -16,7 +23,7 @@ router.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
             await GETMARVELAPI_Creators(data["data"]["results"][0]["id"], "series").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
-                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["fullName"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}',${null},'${JSON.stringify(ccdata[i]["urls"])}')`, token, "Creators")
+                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["fullName"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}',${null},'${JSON.stringify(ccdata[i]["urls"])}')`, token, "Creators");
                 }
             }).catch((err) => {
                 console.log(err);
@@ -24,7 +31,7 @@ router.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
             await GETMARVELAPI_Characters(data["data"]["results"][0]["id"], "series").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
-                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["name"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}','${ccdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["urls"])}')`, token, "Characters")
+                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["name"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}','${ccdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["urls"])}')`, token, "Characters");
                 }
             }).catch((err) => {
                 console.log(err);
@@ -41,9 +48,9 @@ router.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
                 cvdata = cvdata["data"]["results"];
                 for (let i = 0; i < cvdata.length; i++) {
                     if (cvdata[i]["description"] == null) {
-                        await insertIntoDB("", `('${cvdata[i]["id"] + "_1"}','${cvdata[i]["title"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["thumbnail"])}','${null}','${JSON.stringify(cvdata[i]["urls"])}','${data["data"]["results"][0]["id"] + "_1"}')`, token, "relations")
+                        await insertIntoDB("", `('${cvdata[i]["id"] + "_1"}','${cvdata[i]["title"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["thumbnail"])}','${null}','${JSON.stringify(cvdata[i]["urls"])}','${data["data"]["results"][0]["id"] + "_1"}')`, token, "relations");
                     } else {
-                        await insertIntoDB("", `('${cvdata[i]["id"] + "_1"}','${cvdata[i]["title"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["thumbnail"])}','${cvdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["urls"])}','${data["data"]["results"][0]["id"] + "_1"}')`, token, "relations")
+                        await insertIntoDB("", `('${cvdata[i]["id"] + "_1"}','${cvdata[i]["title"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["thumbnail"])}','${cvdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(cvdata[i]["urls"])}','${data["data"]["results"][0]["id"] + "_1"}')`, token, "relations");
                     }
                 }
             }).catch((err) => {
@@ -52,20 +59,20 @@ router.post("/api/marvel", apiMarvelLimiter, async (req, res) => {
         }
     }).catch((err) => {
         console.log(err);
-    })
+    });
     res.sendStatus(200);
-})
+});
 
 router.get("/api/marvel/searchonly/:name/", apiMarvelLimiter, async (req, res) => {
     GETMARVELAPI_SEARCH(req.params.name).then(function (data) {
         res.send(data);
-    })
-})
+    });
+});
 router.get("/api/marvel/searchonly/:name/:date", apiMarvelLimiter, async (req, res) => {
     GETMARVELAPI_SEARCH(req.params.name, req.params.date).then(function (data) {
         res.send(data);
-    })
-})
+    });
+});
 router.get("/insert/marvel/book/", apiMarvelLimiter, async function (req, res) {
     let token = req.headers.token;
     let realname = req.headers.name;
@@ -79,31 +86,31 @@ router.get("/insert/marvel/book/", apiMarvelLimiter, async function (req, res) {
         }
         if (cdata["data"]["total"] > 0) {
             cdata = cdata["data"]["results"][0];
-            await insertIntoDB("", `('${cdata["id"] + "_1"}','1','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"] !== null ? cdata["description"].replaceAll("'", "''") : ""}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books")
+            await insertIntoDB("", `('${cdata["id"] + "_1"}','1','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${cdata["thumbnail"].path + "/detail." + cdata["thumbnail"].extension}','${cdata["issueNumber"]}','${cdata["description"] !== null ? cdata["description"].replaceAll("'", "''") : ""}','${cdata["format"]}',${cdata["pageCount"]},'${JSON.stringify(cdata["urls"])}','${JSON.stringify(cdata["series"])}','${JSON.stringify(cdata["creators"])}','${JSON.stringify(cdata["characters"])}','${JSON.stringify(cdata["prices"])}','${JSON.stringify(cdata["dates"])}','${JSON.stringify(cdata["collectedIssues"])}','${JSON.stringify(cdata["collections"])}','${JSON.stringify(cdata["variants"])}',false)`, token, "Books");
             GETMARVELAPI_Creators(cdata["id"], "comics").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
-                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["fullName"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}',${null},'${JSON.stringify(ccdata[i]["urls"])}')`, token, "Creators")
+                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["fullName"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}',${null},'${JSON.stringify(ccdata[i]["urls"])}')`, token, "Creators");
                 }
             });
             GETMARVELAPI_Characters(cdata["id"], "comics").then(async (ccdata) => {
                 ccdata = ccdata["data"]["results"];
                 for (let i = 0; i < ccdata.length; i++) {
-                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["name"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}','${ccdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["urls"])}')`, token, "Characters")
+                    await insertIntoDB("", `('${ccdata[i]["id"] + "_1"}','${ccdata[i]["name"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["thumbnail"])}','${ccdata[i]["description"].replaceAll("'", "''")}','${JSON.stringify(ccdata[i]["urls"])}')`, token, "Characters");
                 }
             });
         } else {
-            await insertIntoDB("", `('${Math.floor(Math.random() * 100000) + "_1"}','${1}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books")
+            await insertIntoDB("", `('${Math.floor(Math.random() * 100000) + "_1"}','${1}','${realname}',null,${0},${0},${1},${0},${0},${0},'${path}','${null}','${null}','${null}','${null}',${null},'${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}','${null}',false)`, token, "Books");
         }
-    })
-})
+    });
+});
 
 router.get("/api/marvel/getComics/:name/:date", apiMarvelLimiter, async function (req, res) {
     let name = decodeURIComponent(req.params.name);
     let date = decodeURIComponent(req.params.date);
-    GETMARVELAPI_Comics(req.params.name, req.params.date).then(function (data) {
+    GETMARVELAPI_Comics(name, date).then(function (data) {
         res.send(data);
-    })
-})
+    });
+});
 
 module.exports = router;

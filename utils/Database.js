@@ -1,3 +1,10 @@
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+let openedDB = new Map();
+let sqlite3 = require("sqlite3");
+
+function disableOpenedDB(userToken) {
+    openedDB.delete(userToken);
+}
 function UpdateDB(type, column, value, token, table, where, whereEl) {
     if (type === "edit") {
         let listOfColumns = column;
@@ -5,7 +12,7 @@ function UpdateDB(type, column, value, token, table, where, whereEl) {
         let what = [];
         for (let i = 0; i < listOfColumns.length; i++) {
             if (listOfColumns[i] === "description") {
-                what.push(listOfColumns[i] + " = '" + listOfValues[i].toString().replaceAll("'", "''").replaceAll('"', '\\"') + "'");
+                what.push(listOfColumns[i] + " = '" + listOfValues[i].toString().replace(/'/g, "''").replace(/"/g, '\\"') + "'");
             } else {
                 what.push(listOfColumns[i] + " = '" + listOfValues[i] + "'");
             }
@@ -47,7 +54,7 @@ async function getAllColumns(user, tableName) {
             console.log(err);
         }
         return rows["tbl_name"][tableName];
-    })
+    });
 }
 
 function makeDB(forwho) {
@@ -68,7 +75,7 @@ function makeDB(forwho) {
     db.run("CREATE TABLE IF NOT EXISTS variants (ID_variant VARCHAR(255) PRIMARY KEY NOT NULL UNIQUE,name VARCHAR(255),image varchar(255),url VARCHAR(255),series VARCHAR(255), FOREIGN KEY (series) REFERENCES Series (ID_Series))");
     db.run("CREATE TABLE IF NOT EXISTS relations (ID_variant VARCHAR(255) PRIMARY KEY NOT NULL UNIQUE,name VARCHAR(255),image varchar(255),description VARCHAR(255),url VARCHAR(255),series VARCHAR(255), FOREIGN KEY (series) REFERENCES Series (ID_Series))");
     db.run("CREATE TABLE IF NOT EXISTS Libraries (ID_LIBRARY INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME VARCHAR(255) NOT NULL,PATH VARCHAR(4096) NOT NULL,API_ID INTEGER NOT NULL,FOREIGN KEY (API_ID) REFERENCES API(ID_API));");
-    db.run("PRAGMA user_version = " + process.env.npm_package_version.split(".").join("") + ";");
+    db.run("PRAGMA user_version = " + process.env.npm_package_version?.split(".").join("") + ";");
     db.close();
 }
 
@@ -82,9 +89,9 @@ async function checkForDBUpdate(forwho) {
         }
         if (DBVersion <= 20001) {
         }
-        var pjson = require('./package.json');
-        getDB(forwho).run("PRAGMA user_version = " + pjson.version.split(".").join("") + ";");
-    })
+        var pjson = require('../package.json');
+        getDB(forwho).run("PRAGMA user_version = " + pjson.version?.split(".").join("") + ";");
+    });
 }
 
 function getDB(forwho) {
@@ -93,9 +100,19 @@ function getDB(forwho) {
             if (err) {
                 return console.error(err.message);
             }
-            checkForDBUpdate(forwho)
+            checkForDBUpdate(forwho);
             console.log("Conected to the DB");
         }));
     }
     return openedDB.get(forwho);
 }
+
+module.exports = {
+    getDB,
+    makeDB,
+    UpdateDB,
+    insertIntoDB,
+    backupTable,
+    getAllColumns,
+    disableOpenedDB
+};

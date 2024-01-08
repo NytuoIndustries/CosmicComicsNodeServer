@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-
-
+const express = require("express");
+let router = express.Router();
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { replaceHTMLAdressPath, resolveToken, GetListOfImg } = require("../utils/Utils");
+const fs = require("fs");
 router.get("/viewer/view/current/:token", (req, res) => {
     res.send(GetListOfImg(CosmicComicsTemp + "/profiles/" + resolveToken(req.params.token) + "/current_book/"));
 });

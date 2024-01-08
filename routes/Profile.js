@@ -1,7 +1,15 @@
-const express = require('express');
-const router = express.Router();
-
-
+const express = require("express");
+var RateLimit = require('express-rate-limit');
+let router = express.Router();
+var accountLimiter = RateLimit({
+    windowMs: 1 * 60 * 1000 * 60,
+    max: 100,
+});
+const CosmicComicsTemp = require("../server").CosmicComicsTemp;
+const { resolveToken, tokena, changePermissionForFilesInFolder } = require("../utils/Utils");
+const fs = require("fs");
+const path = require("path");
+const { makeDB, getDB, disableOpenedDB } = require("../utils/Database");
 router.get("/profile/logcheck/:token", (req, res) => {
     var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
     var config = JSON.parse(configFile);
@@ -78,11 +86,11 @@ router.post("/createUser", function (req, res) {
             JSON.stringify(obj, null, 2), { encoding: "utf8" }
         );
     }
-    if (req.body.pp === {}) {
-        let random = Math.floor(Math.random() * (fs.readdirSync(__dirname + "/public/Images/account_default/").length - 1) + 1);
-        fs.copyFileSync(__dirname + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
+    if (req.body.pp == null) {
+        let random = Math.floor(Math.random() * (fs.readdirSync(root + "/public/Images/account_default/").length - 1) + 1);
+        fs.copyFileSync(root + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     } else {
-        let nppPath = req.body.pp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, __dirname + "/public");
+        let nppPath = req.body.pp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, root + "/public");
         fs.copyFileSync(nppPath, CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     }
     makeDB(name);
@@ -94,7 +102,7 @@ router.post("/createUser", function (req, res) {
 router.post("/profile/deleteAccount", accountLimiter, (req, res) => {
     const token = resolveToken(req.body.token);
     getDB(token).close();
-    openedDB.delete(token);
+    disableOpenedDB(token);
     fs.rm(CosmicComicsTemp + "/profiles/" + token, { recursive: true, force: true }, function (err) {
         console.log(err);
     });
@@ -107,8 +115,8 @@ router.post("/profile/modification", accountLimiter, (req, res) => {
     if (req.body.npass != null) {
         fs.writeFileSync(CosmicComicsTemp + "/profiles/" + token + "/passcode.txt", req.body.npass.trim(), { encoding: "utf-8" });
     }
-    if (req.body.npp !== {}) {
-        let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, __dirname + "/public");
+    if (req.body.npp != null) {
+        let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, root + "/public");
         fs.copyFileSync(nppPath, CosmicComicsTemp + "/profiles/" + token + "/pp.png");
     }
     if (req.body.nuser != null) {
@@ -129,13 +137,6 @@ router.get("/profile/login/:name/:passcode", accountLimiter, (req, res) => {
             }
             fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config));
             fs.mkdirSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/current_book", { recursive: true });
-            statusProgress[token] = {
-                "unzip": {
-                    "status": "waiting",
-                    "percentage": 0,
-                    "current_file": "",
-                },
-            };
             res.send(token);
         } else {
             res.send(false);
@@ -160,6 +161,7 @@ router.get("/profile/discover", (req, res) => {
             result.push(resultOBJ);
         });
     } catch (e) {
+        console.log(e);
         console.log("No profile, First time setup...");
     }
     res.send(result);
@@ -180,7 +182,7 @@ router.get("/profile/getPPBN/:name", accountLimiter, (req, res) => {
     res.sendFile(CosmicComicsTemp + "/profiles/" + req.params.name + "/pp.png");
 });
 router.get("/profile/custo/getNumber", accountLimiter, (req, res) => {
-    res.send({ "length": fs.readdirSync(__dirname + "/public/Images/account_default").length });
+    res.send({ "length": fs.readdirSync(root + "/public/Images/account_default").length });
 });
 
 module.exports = router;

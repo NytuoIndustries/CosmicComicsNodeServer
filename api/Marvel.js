@@ -1,3 +1,6 @@
+let MarvelPublicKey = process.env.MARVEL_PUBLIC_KEY;
+let MarvelPrivateKey = process.env.MARVEL_PRIVATE_KEY;
+
 async function API_MARVEL_GET(name = "") {
     console.log("API_MARVEL_GET: " + name);
     if (name === "") {
@@ -48,12 +51,13 @@ function recoverMarvelAPILink(what, id, what2, noVariants = true, orderBy = "iss
 
 function generateMarvelAPIAuth() {
     let ts = new Date().getTime();
+    if (MarvelPublicKey === undefined || MarvelPrivateKey === undefined) return "";
     return "&ts=" + ts + "&hash=" + CryptoJS.MD5(ts + MarvelPrivateKey + MarvelPublicKey).toString() + "&apikey=" + MarvelPublicKey;
 }
 
 
 async function GETMARVELAPI_variants(id) {
-    let url = recoverMarvelAPILink("series", id, "comics", true, "issueNumber")
+    let url = recoverMarvelAPILink("series", id, "comics", true, "issueNumber");
     let response = await fetch(url);
     let data = await response.json();
     console.log(data);
@@ -61,7 +65,7 @@ async function GETMARVELAPI_variants(id) {
 }
 
 async function GETMARVELAPI_relations(id) {
-    let url = recoverMarvelAPILink("series", id, "comics", true, "issueNumber")
+    let url = recoverMarvelAPILink("series", id, "comics", true, "issueNumber");
     let response = await fetch(url);
     let data = await response.json();
     console.log(data);
@@ -69,7 +73,7 @@ async function GETMARVELAPI_relations(id) {
 }
 
 async function GETMARVELAPI_Characters(id, type) {
-    let url = recoverMarvelAPILink("characters", id, "comics", true, "issueNumber", type)
+    let url = recoverMarvelAPILink("characters", id, "comics", true, "issueNumber", type);
     let response = await fetch(url);
     let data = await response.json();
     console.log(data);
@@ -77,7 +81,7 @@ async function GETMARVELAPI_Characters(id, type) {
 }
 
 async function GETMARVELAPI_Creators(id, type) {
-    let url = recoverMarvelAPILink("creators", id, "comics", true, "issueNumber", type)
+    let url = recoverMarvelAPILink("creators", id, "comics", true, "issueNumber", type);
     let response = await fetch(url);
     let data = await response.json();
     console.log(data);
@@ -85,7 +89,7 @@ async function GETMARVELAPI_Creators(id, type) {
 }
 
 async function GETMARVELAPI_Comics_ByID(id) {
-    let url = recoverMarvelAPILink("comics", id, "", true, "issueNumber")
+    let url = recoverMarvelAPILink("comics", id, "", true, "issueNumber");
     let response = await fetch(url);
     let data = await response.json();
     console.log(data);
@@ -155,3 +159,15 @@ async function GETMARVELAPI_Comics(name = "", seriesStartDate = "") {
     console.log(data);
     return data;
 }
+
+module.exports = {
+    API_MARVEL_GET,
+    GETMARVELAPI_variants,
+    GETMARVELAPI_relations,
+    GETMARVELAPI_Characters,
+    GETMARVELAPI_Creators,
+    GETMARVELAPI_Comics_ByID,
+    GETMARVELAPI_SEARCH,
+    GETMARVELAPI_Series_ByID,
+    GETMARVELAPI_Comics
+};
