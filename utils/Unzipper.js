@@ -162,7 +162,12 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
         /*fs.mkdirSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");*/
         fs.mkdirSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
         fs.writeFileSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book/path.txt", zipPath);
-        fs.chmodSync(root + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
+        try{
+            fs.chmodSync(root + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
+        }catch(e){
+            console.log(e);
+            fs.chmodSync(path.dirname(__dirname) + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
+        }
         if (ext === "epub" || ext === "ebook") {
             const Stream = Seven.extractFull(zipPath, ExtractDir, {
                 recursive: true,
