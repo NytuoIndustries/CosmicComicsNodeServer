@@ -6,10 +6,10 @@ const Path27Zip = SevenBin.path7za;
 const unrarBin = require("unrar-binaries");
 const Unrar = require("unrar");
 const puppeteer = require("puppeteer");
-const { root, CosmicComicsTemp } = require("../server");
-const { GetElFromInforPath, GetListOfImg, resolveToken } = require("./Utils");
-const { getDB, } = require("./Database");
-const { SendTo } = require("../routes/Unzip");
+const { root, CosmicComicsTemp } = require("./GlobalVariable");
+const { GetElFromInforPath, GetListOfImg, resolveToken, changePermissionForFilesInFolder } = require("./Utils");
+const { getDB, UpdateDB } = require("./Database");
+const { SendTo } = require("../utils/GlobalVariable");
 function initStatusProgress(token) {
     statusProgress[token] = {
         "unzip": {
@@ -162,9 +162,9 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
         /*fs.mkdirSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");*/
         fs.mkdirSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book");
         fs.writeFileSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book/path.txt", zipPath);
-        try{
+        try {
             fs.chmodSync(root + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
-        }catch(e){
+        } catch (e) {
             console.log(e);
             fs.chmodSync(path.dirname(__dirname) + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
         }
@@ -191,7 +191,9 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                     "current_file": "",
                 };
                 listOfElements = fs.readdirSync(ExtractDir);
-                const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+                const browser = await puppeteer.launch({
+                    headless: true, args: ['--no-sandbox']
+                });
                 const page = await browser.newPage();
                 let bignb = 0;
                 for (var i = 0; i < listOfElements.length; i++) {
@@ -453,9 +455,43 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
     }
 }
 
+function fillBlankImages(token) {
+    //get the null, "null", "undefined", blank cover or BannerImage from the books DB
+    try {
+        let result = [];
+        getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
+            if (err) return console.log("Error getting element", err);
+            resD.forEach((row) => {
+                console.log(row);
+                result.push(row);
+            });
+            for (const book of result) {
+                console.log("Beggining fillBlankImages for : " + book.NOM);
+                let filename = book.ID_book;
+                try {
+                    unzip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
+                    await changePermissionForFilesInFolder(root + "/public/FirstImagesOfAll/");
+                    /*
+                                        let newpath = await WConv(filename + ".jpg");
+                    */
+                    UpdateDB("noedit", "URLCover", "'" + root + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
+                } catch (e) {
+                    console.log("NOT SUPPORTED");
+                }
+            }
+        });
+    } catch (e) {
+        console.log(e);
+    }
+    //Unzip the first image for each with their path to a folder
+    //Convert it in webp
+    //Replace the null, "null", "undefined", blank cover or BannerImage from the books DB with the new webp
+}
+
 module.exports = {
     UnZip,
     unzip_first,
+    fillBlankImages,
     initStatusProgress,
     getStatusProgress
 };

@@ -1,15 +1,11 @@
 const express = require("express");
 let router = express.Router();
-const { CosmicComicsTemp } = require("../server");
+const { CosmicComicsTemp } = require("../utils/GlobalVariable");
 const { replaceHTMLAdressPath, resolveToken } = require("../utils/Utils");
 const path = require("path");
 const { UnZip, getStatusProgress } = require("../utils/Unzipper");
 var currentBookPath = "";
-var SendToUnZip = "";
-function SendTo(val) {
-    console.log("sendto => " + val);
-    SendToUnZip = val;
-}
+const { SendToUnZip } = require("../utils/GlobalVariable");
 router.get("/getStatus/:token/:type", (req, res) => {
     res.send(getStatusProgress(req.params.token, req.params.type));
 });
@@ -34,6 +30,5 @@ router.get("/Unzip/:path/:token", (req, res) => {
 
 module.exports = {
     router,
-    SendTo,
     currentBookPath
 }

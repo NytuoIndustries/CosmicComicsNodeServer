@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { root, CosmicComicsTemp } = require("../server");
+const { root, CosmicComicsTemp } = require("./GlobalVariable");
 var rand = function () {
     return Math.random().toString(36).substring(2); // remove `0.`
 };
@@ -7,8 +7,6 @@ var tokena = function () {
     return rand() + rand(); // to make it longer
 };
 let mangaMode = false;
-const { unzip_first } = require("./Unzipper");
-const { getDB, UpdateDB } = require("./Database");
 const ValidatedExtensionImage = [
     "png",
     "jpg",
@@ -113,39 +111,6 @@ async function WConv(file) {
     return newfile;
 }
 
-function fillBlankImages(token) {
-    //get the null, "null", "undefined", blank cover or BannerImage from the books DB
-    try {
-        let result = [];
-        getDB(resolveToken(token)).all("select * from Books where URLCover IS NULL OR URLCover = 'null' OR URLCover='undefined';", async function (err, resD) {
-            if (err) return console.log("Error getting element", err);
-            resD.forEach((row) => {
-                console.log(row);
-                result.push(row);
-            });
-            for (const book of result) {
-                console.log("Beggining fillBlankImages for : " + book.NOM);
-                let filename = book.ID_book;
-                try {
-                    unzip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
-                    await changePermissionForFilesInFolder(root + "/public/FirstImagesOfAll/");
-                    /*
-                                        let newpath = await WConv(filename + ".jpg");
-                    */
-                    UpdateDB("noedit", "URLCover", "'" + root + "/public/FirstImagesOfAll/" + filename + ".jpg'", token, "Books", "ID_book", book.ID_book);
-                } catch (e) {
-                    console.log("NOT SUPPORTED");
-                }
-            }
-        });
-    } catch (e) {
-        console.log(e);
-    }
-    //Unzip the first image for each with their path to a folder
-    //Convert it in webp
-    //Replace the null, "null", "undefined", blank cover or BannerImage from the books DB with the new webp
-}
-
 //Getting the list of images
 function GetListOfImg(dirPath) {
     if (fs.existsSync(dirPath)) {
@@ -192,7 +157,6 @@ module.exports = {
     hasNumbers,
     replaceHTMLAdressPath,
     WConv,
-    fillBlankImages,
     GetListOfImg,
     resolveToken,
     changePermissionForFilesInFolder,

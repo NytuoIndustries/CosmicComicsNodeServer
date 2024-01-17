@@ -2,33 +2,13 @@ let express = require("express");
 const fs = require("fs");
 const path = require("path");
 const app = express();
-const os = require("os");
 app.use("", express.static(__dirname + "/public"));
-
-const isPortable = fs.existsSync(path.join(__dirname, "portable.txt"));
-const isElectron = fs.existsSync(path.join(__dirname, 'portable.txt')) && fs.readFileSync(path.join(__dirname, "portable.txt"), "utf8") === "electron";
-let devMode = false;
+const { setRoot, setCosmicComicsTemp, isDevMode, CosmicComicsTemp } = require("./utils/GlobalVariable");
 
 
-let path2Data;
-if (isPortable) {
-    if (isElectron) {
-        path2Data = path.join(path.dirname(path.dirname(path.dirname(__dirname))), 'CosmicData');
-    } else {
-        path2Data = path.join(path.dirname(__dirname), 'CosmicData');
-    }
-} else {
-    if (os.platform() === "win32") {
-        path2Data = process.env.APPDATA + "/CosmicComics/CosmicData/";
-    } else if (os.platform() === "darwin") {
-        path2Data = process.env.HOME + "/Library/Application Support/CosmicComics/CosmicData/";
-    } else if (os.platform() === "linux") {
-        path2Data = process.env.HOME + "/.config/CosmicComics/CosmicData/";
-    }
-}
-let CosmicComicsTemp = path2Data;
-if (devMode) {
-    CosmicComicsTemp = path.join(__dirname, "CosmicData");
+
+if (isDevMode()) {
+    setCosmicComicsTemp(path.join(__dirname, "CosmicData"));
 }
 //Creating the folders to the CosmicData's path
 fs.mkdirSync(CosmicComicsTemp, { recursive: true });
@@ -40,11 +20,9 @@ const dotenv = require('dotenv');
 dotenv.config({
     path: CosmicComicsTemp + "/.env"
 });
-var root = __dirname;
-module.exports = {
-    CosmicComicsTemp,
-    root
-};
+
+setRoot(__dirname);
+setCosmicComicsTemp(CosmicComicsTemp);
 
 const changePermissionForFilesInFolder = require("./utils/Utils").changePermissionForFilesInFolder;
 
@@ -56,7 +34,7 @@ if (!fs.existsSync(CosmicComicsTemp + "/serverconfig.json")) {
     };
     fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(obj), { encoding: 'utf8' });
 } else {
-    if (devMode === false) {
+    if (isDevMode() === false) {
         //Reseting the serverconfig.json for revoking tokens
         let configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json");
         let config = JSON.parse(configFile);

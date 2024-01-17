@@ -90,7 +90,7 @@ async function API_ANILIST_GET(nameroot) {
   }
 }`;
   let variables = {
-    search: name,
+    search: nameroot,
     page: 1,
     perPage: 5
   };
@@ -121,17 +121,16 @@ async function API_ANILIST_GET(nameroot) {
   }
 
   function handleData(dataroot) {
-    console.log(data);
-    if (data.data.Page.media.length === 0) {
+    console.log(dataroot);
+    if (dataroot.data.Page.media.length === 0) {
       results = null;
       return;
     }
-    let baseObject = clone(data.data.Page.media[0]);
-    let staffObject = clone(data.data.Page.media[0].staff.nodes);
-    let charactersObject = clone(data.data.Page.media[0].characters.nodes);
-    let relationsObjectNodes = clone(data.data.Page.media[0].relations.nodes);
-    let relationsObjectEdges = clone(data.data.Page.media[0].relations.edges);
-    let relationsObjectroot = [];
+    let baseObject = clone(dataroot.data.Page.media[0]);
+    let staffObject = clone(dataroot.data.Page.media[0].staff.nodes);
+    let charactersObject = clone(dataroot.data.Page.media[0].characters.nodes);
+    let relationsObjectNodes = clone(dataroot.data.Page.media[0].relations.nodes);
+    let relationsObjectEdges = clone(dataroot.data.Page.media[0].relations.edges);
     for (let i = 0; i < relationsObjectNodes.length; i++) {
       relationsObject[i] = relationsObjectNodes[i];
       relationsObject[i]["relationType"] = relationsObjectEdges[i].relationType;
@@ -166,7 +165,7 @@ async function API_ANILIST_GET(nameroot) {
   return results;
 
   function handleError(errorroot) {
-    console.error(error);
+    console.error(errorroot);
   }
 }
 
@@ -191,7 +190,7 @@ async function API_ANILIST_GET_SEARCH(nameroot) {
   }
 }`;
   let variables = {
-    search: name,
+    search: nameroot,
     page: 1,
     perPage: 20
   };
@@ -222,12 +221,12 @@ async function API_ANILIST_GET_SEARCH(nameroot) {
   }
 
   function handleData(dataroot) {
-    console.log(data);
-    if (data.data.Page.media.length === 0) {
+    console.log(dataroot);
+    if (dataroot.data.Page.media.length === 0) {
       results = null;
       return;
     }
-    let baseObject = clone(data.data.Page.media);
+    let baseObject = clone(dataroot.data.Page.media);
     results = {
       "base": baseObject,
     };
@@ -236,7 +235,7 @@ async function API_ANILIST_GET_SEARCH(nameroot) {
   return results;
 
   function handleError(errorroot) {
-    console.error(error);
+    console.error(errorroot);
   }
 }
 

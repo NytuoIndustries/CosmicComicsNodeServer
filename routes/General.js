@@ -9,8 +9,9 @@ const SevenBin = require("7zip-bin");
 const Seven = require("node-7z");
 const Path27Zip = SevenBin.path7za;
 const { spawn } = require('child_process');
-const { replaceHTMLAdressPath, resolveToken, fillBlankImages } = require("../utils/Utils");
-const { root, CosmicComicsTemp } = require("../server");
+const { replaceHTMLAdressPath, resolveToken } = require("../utils/Utils");
+const { fillBlankImages } = require("../utils/Unzipper");
+const { root, CosmicComicsTemp } = require("../utils/GlobalVariable");
 const { getDB } = require("../utils/Database");
 const tinycolor = require("tinycolor2");
 

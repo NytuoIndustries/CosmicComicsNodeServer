@@ -1,6 +1,6 @@
 const express = require("express");
 let router = express.Router();
-const { CosmicComicsTemp } = require("../server");
+const { CosmicComicsTemp } = require("../utils/GlobalVariable");
 const { UpdateDB, getDB } = require("../utils/Database");
 const { resolveToken } = require("../utils/Utils");
 const { GETMARVELAPI_Comics_ByID, GETMARVELAPI_Series_ByID } = require("../api/Marvel");
@@ -8,6 +8,8 @@ const { GETOLAPI_Comics_ByID, GETOLAPI_search } = require("../api/OpenLibrary");
 const anilist = require("anilist-node");
 const AniList = new anilist();
 const { GETGBAPI_Comics_ByID } = require("../api/GoogleBooks");
+const fs = require("fs");
+
 router.get("/DB/update/:token/:dbName/:colName/:value/:id", (req, res) => {
     try {
         getDB(resolveToken(req.params.token)).run("UPDATE " + req.params.dbName + " SET " + req.params.colName + " = " + req.params.value + " WHERE ID_book='" + req.params.id + "';");
@@ -401,7 +403,7 @@ router.post("/refreshMeta", async function (req, res) {
                 asso["pageCount"] = res2.volumeInfo.pageCount;
                 asso["URLs"] = JSON.stringify(res2.volumeInfo.infoLink);
                 asso["dates"] = JSON.stringify(res2.volumeInfo.publishedDate);
-                asso["prices"] = JSON.stringify(res2.price);
+                asso["prices"] = JSON.stringify(price);
                 asso["creators"] = JSON.stringify(res2.volumeInfo.authors);
                 asso["characters"] = "null";
                 asso["series"] = "null";
