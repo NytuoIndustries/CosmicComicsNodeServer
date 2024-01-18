@@ -1,7 +1,7 @@
 const express = require("express");
-var RateLimit = require('express-rate-limit');
+const RateLimit = require('express-rate-limit');
 let router = express.Router();
-var accountLimiter = RateLimit({
+const accountLimiter = RateLimit({
     windowMs: 1 * 60 * 1000 * 60,
     max: 100,
 });
@@ -11,11 +11,11 @@ const path = require("path");
 const { makeDB, getDB, disableOpenedDB } = require("../utils/Database");
 const { root, CosmicComicsTemp } = require("../utils/GlobalVariable");
 router.get("/profile/logcheck/:token", (req, res) => {
-    var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
-    var config = JSON.parse(configFile);
-    for (var i in config) {
-        for (var j in config["Token"]) {
-            if (config["Token"][j] == req.params.token) {
+    const configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
+    const config = JSON.parse(configFile);
+    for (const i in config) {
+        for (const j in config["Token"]) {
+            if (config["Token"][j] === req.params.token) {
                 res.send(j);
                 return;
             }
@@ -25,11 +25,11 @@ router.get("/profile/logcheck/:token", (req, res) => {
 });
 
 router.post("/profile/logout/:token", (req, res) => {
-    var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
-    var config = JSON.parse(configFile);
-    for (var i in config) {
-        for (var j in config["Token"]) {
-            if (config["Token"][j] == req.params.token) {
+    const configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
+    const config = JSON.parse(configFile);
+    for (const i in config) {
+        for (const j in config["Token"]) {
+            if (config["Token"][j] === req.params.token) {
                 delete config["Token"][j];
                 fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config), { encoding: 'utf8' });
                 res.sendStatus(200);
@@ -90,7 +90,7 @@ router.post("/createUser", function (req, res) {
         let random = Math.floor(Math.random() * (fs.readdirSync(root + "/public/Images/account_default/").length - 1) + 1);
         fs.copyFileSync(root + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     } else {
-        let nppPath = req.body.pp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, root + "/public");
+        let nppPath = req.body.pp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3})?(localhost)?:[0-9]{4}/g, root + "/public");
         fs.copyFileSync(nppPath, CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     }
     makeDB(name);
@@ -116,7 +116,7 @@ router.post("/profile/modification", accountLimiter, (req, res) => {
         fs.writeFileSync(CosmicComicsTemp + "/profiles/" + token + "/passcode.txt", req.body.npass.trim(), { encoding: "utf-8" });
     }
     if (req.body.npp != null) {
-        let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, root + "/public");
+        let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3})?(localhost)?:[0-9]{4}/g, root + "/public");
         fs.copyFileSync(nppPath, CosmicComicsTemp + "/profiles/" + token + "/pp.png");
     }
     if (req.body.nuser != null) {
@@ -127,12 +127,12 @@ router.post("/profile/modification", accountLimiter, (req, res) => {
 
 router.get("/profile/login/:name/:passcode", accountLimiter, (req, res) => {
     if (fs.existsSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/passcode.txt")) {
-        var passcode = fs.readFileSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/passcode.txt", "utf8");
-        if (passcode == req.params.passcode) {
+        const passcode = fs.readFileSync(CosmicComicsTemp + "/profiles/" + req.params.name + "/passcode.txt", "utf8");
+        if (passcode === req.params.passcode) {
             let token = tokena();
-            var configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
-            var config = JSON.parse(configFile);
-            for (var i in config) {
+            const configFile = fs.readFileSync(CosmicComicsTemp + "/serverconfig.json", "utf8");
+            const config = JSON.parse(configFile);
+            for (const i in config) {
                 config["Token"][req.params.name] = token;
             }
             fs.writeFileSync(CosmicComicsTemp + "/serverconfig.json", JSON.stringify(config));
@@ -153,11 +153,7 @@ router.get("/profile/discover", (req, res) => {
             let resultOBJ = {};
             resultOBJ.name = path.basename(file, path.extname(file));
             resultOBJ.image = (req.headers["x-forwarded-proto"] || req.protocol) + "://" + req.headers.host + "/profile/getPPBN/" + path.basename(file, path.extname(file));
-            if (fs.existsSync(CosmicComicsTemp + "/profiles/" + file + "/passcode.txt")) {
-                resultOBJ.passcode = true;
-            } else {
-                resultOBJ.passcode = false;
-            }
+            resultOBJ.passcode = fs.existsSync(CosmicComicsTemp + "/profiles/" + file + "/passcode.txt");
             result.push(resultOBJ);
         });
     } catch (e) {

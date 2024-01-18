@@ -1,6 +1,7 @@
 const { CosmicComicsTemp } = require("./GlobalVariable");
 let openedDB = new Map();
 let sqlite3 = require("sqlite3");
+const {resolveToken} = require("./Utils");
 
 function disableOpenedDB(userToken) {
     openedDB.delete(userToken);
@@ -107,6 +108,17 @@ function getDB(forwho) {
     return openedDB.get(forwho);
 }
 
+async function clearData(user) {
+    await getDB(user).run("DELETE FROM Books");
+    await getDB(user).run("DELETE FROM Bookmarks");
+    await getDB(user).run("DELETE FROM Series");
+    await getDB(user).run("DELETE FROM Creators");
+    await getDB(user).run("DELETE FROM Characters");
+    await getDB(user).run("DELETE FROM variants");
+    await getDB(user).run("DELETE FROM relations");
+    await getDB(user).run("DELETE FROM Libraries");
+}
+
 module.exports = {
     getDB,
     makeDB,
@@ -114,5 +126,6 @@ module.exports = {
     insertIntoDB,
     backupTable,
     getAllColumns,
-    disableOpenedDB
+    disableOpenedDB,
+    clearData
 };

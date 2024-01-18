@@ -10,6 +10,7 @@ const { root, CosmicComicsTemp } = require("./GlobalVariable");
 const { GetElFromInforPath, GetListOfImg, resolveToken, changePermissionForFilesInFolder } = require("./Utils");
 const { getDB, UpdateDB } = require("./Database");
 const { SendTo } = require("../utils/GlobalVariable");
+const {extname, dirname} = require("path");
 function initStatusProgress(token) {
     statusProgress[token] = {
         "unzip": {
@@ -76,7 +77,7 @@ function unzip_first(zipPath, ExtractDir, ext, token, fileName) {
                     console.log("An error occured" + err);
                 });
             });
-        } else if (ext === "rar" || ext === "cbr") {
+        } else if (["rar", "cbr"].includes(ext)) {
             let configFile = fs.readFileSync(CosmicComicsTemp + "/profiles/" + token + "/config.json");
             let parsedJSON = JSON.parse(configFile);
             let provider = GetElFromInforPath("update_provider", parsedJSON);
@@ -114,15 +115,7 @@ function unzip_first(zipPath, ExtractDir, ext, token, fileName) {
                             let stream = archive.stream(currentName);
                             stream.on("error", console.error);
                             if (
-                                currentName.includes("png") ||
-                                currentName.includes("jpg") ||
-                                currentName.includes("jpeg") ||
-                                currentName.includes(".gif") ||
-                                currentName.includes("bmp") ||
-                                currentName.includes("apng") ||
-                                currentName.includes("svg") ||
-                                currentName.includes("ico") ||
-                                currentName.includes("webp")
+                                ["png", "jpg", "jpeg", "gif", "bmp", "apng", "svg", "ico", "webp"].some(ext => currentName.includes(ext))
                             ) {
                                 if (!fs.existsSync(ExtractDir + "/" + fileName + ".jpg")) {
                                     stream.pipe(
@@ -139,7 +132,7 @@ function unzip_first(zipPath, ExtractDir, ext, token, fileName) {
             });
         } else {
             //throw error for try catch
-            throw "not supported";
+            console.log("not supported");
         }
     } catch (error) {
         if (error === "not supported") {
@@ -151,9 +144,10 @@ function unzip_first(zipPath, ExtractDir, ext, token, fileName) {
 
 //UnZip the archive
 async function UnZip(zipPath, ExtractDir, name, ext, token) {
-    var listOfElements;
+    let archive;
+    let listOfElements;
     try {
-        var n = 0;
+        let n = 0;
         if (fs.existsSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book")) {
             fs.rmSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/current_book", {
                 recursive: true
@@ -166,7 +160,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
             fs.chmodSync(root + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
         } catch (e) {
             console.log(e);
-            fs.chmodSync(path.dirname(__dirname) + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
+            fs.chmodSync(dirname(__dirname) + "/node_modules/7zip-bin/linux/x64/7za", 0o777);
         }
         if (ext === "epub" || ext === "ebook") {
             const Stream = Seven.extractFull(zipPath, ExtractDir, {
@@ -196,8 +190,8 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 });
                 const page = await browser.newPage();
                 let bignb = 0;
-                for (var i = 0; i < listOfElements.length; i++) {
-                    var el = listOfElements[i];
+                for (let i = 0; i < listOfElements.length; i++) {
+                    const el = listOfElements[i];
                     if (el.includes(".xhtml")) {
                         await page.goto("file://" + ExtractDir + "/" + el, { waitUntil: "networkidle0" });
                         await page.emulateMediaType('print');
@@ -219,7 +213,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 console.log(zipPath);
                 try {
                     try {
-                        var result = [];
+                        const result = [];
                         getDB(resolveToken(token)).all("SELECT last_page FROM Books WHERE PATH='" + zipPath + "';", function (err, resD) {
                             if (err) return console.log("Error getting element", err);
                             resD.forEach((row) => {
@@ -282,7 +276,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 console.log(zipPath);
                 try {
                     try {
-                        var result = [];
+                        const result = [];
                         getDB(resolveToken(token)).all("SELECT last_page FROM Books WHERE PATH='" + zipPath + "';", function (err, resD) {
                             if (err) return console.log("Error getting element", err);
                             resD.forEach((row) => {
@@ -290,7 +284,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                                 result.push(row);
                             });
                             console.log(result);
-                            if (result === undefined || result.length == 0) {
+                            if (result === undefined || result.length === 0) {
                                 SendTo(0);
                                 return 0;
                             } else {
@@ -307,12 +301,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 }
             });
         } else if (
-            ext == "zip" ||
-            ext == "cbz" ||
-            ext == "7z" ||
-            ext == "cb7" ||
-            ext == "tar" ||
-            ext == "cbt"
+            ["zip", "cbz", "7z", "cb7", "tar", "cbt"].includes(ext)
         ) {
             const Stream = Seven.extract(zipPath, ExtractDir, {
                 recursive: true,
@@ -340,7 +329,7 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 console.log(zipPath);
                 try {
                     try {
-                        var result = [];
+                        const result = [];
                         getDB(resolveToken(token)).all("SELECT last_page FROM Books WHERE PATH='" + zipPath + "';", function (err, resD) {
                             if (err) return console.log("Error getting element", err);
                             resD.forEach((row) => {
@@ -370,17 +359,17 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                 };
                 console.log("An error occured" + err);
             });
-        } else if (ext == "rar" || ext == "cbr") {
-            var configFile = fs.readFileSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/config.json");
-            var parsedJSON = JSON.parse(configFile);
-            var provider = GetElFromInforPath("update_provider", parsedJSON);
-            if (provider == "msstore") {
-                var archive = new Unrar({
+        } else if (ext === "rar" || ext === "cbr") {
+            const configFile = fs.readFileSync(CosmicComicsTemp + "/profiles/" + resolveToken(token) + "/config.json");
+            const parsedJSON = JSON.parse(configFile);
+            const provider = GetElFromInforPath("update_provider", parsedJSON);
+            if (provider === "msstore") {
+                archive = new Unrar({
                     path: zipPath,
                     bin: CosmicComicsTemp + "/unrar_bin/UnRAR.exe"
                 });
             } else {
-                var archive = new Unrar({
+                archive = new Unrar({
                     path: zipPath,
                     bin: unrarBin
                 });
@@ -400,11 +389,11 @@ async function UnZip(zipPath, ExtractDir, name, ext, token) {
                     return 0;
                 });
                 entries.forEach((file, index) => {
-                    for (var i in file) {
-                        if (i == "name") {
-                            var currentName = file[i];
+                    for (const i in file) {
+                        if (i === "name") {
+                            let currentName = file[i];
                             currentName = currentName.toString();
-                            var stream = archive.stream(currentName);
+                            const stream = archive.stream(currentName);
                             stream.on("error", (_err) => {
                                 statusProgress[token]["unzip"] = {
                                     "status": "error",
@@ -469,7 +458,7 @@ function fillBlankImages(token) {
                 console.log("Beggining fillBlankImages for : " + book.NOM);
                 let filename = book.ID_book;
                 try {
-                    unzip_first(book.PATH, root + "/public/FirstImagesOfAll", path.extname(book.PATH).replaceAll(".", ""), token, filename);
+                    unzip_first(book.PATH, root + "/public/FirstImagesOfAll", extname(book.PATH).replaceAll(".", ""), token, filename);
                     await changePermissionForFilesInFolder(root + "/public/FirstImagesOfAll/");
                     /*
                                         let newpath = await WConv(filename + ".jpg");
@@ -490,8 +479,8 @@ function fillBlankImages(token) {
 
 module.exports = {
     UnZip,
-    unzip_first,
     fillBlankImages,
+    unzip_first,
     initStatusProgress,
     getStatusProgress
 };

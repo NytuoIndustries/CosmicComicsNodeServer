@@ -120,7 +120,7 @@ router.get("/DB/lib/delete/:token/:id", (req, res) => {
 });
 router.post("/DB/get/:token/:dbName", (req, res) => {
     try {
-        var result = [];
+        const result = [];
         const token = resolveToken(req.params.token);
         const requestToDB = req.body.request;
         getDB(token).all("SELECT " + requestToDB + ";", function (err, resD) {

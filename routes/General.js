@@ -17,13 +17,13 @@ const tinycolor = require("tinycolor2");
 
 let DLBOOKPATH = "";
 router.get("/getListOfFolder/:path", (req, res) => {
-    var dir = req.params.path;
+    let dir = req.params.path;
     dir = replaceHTMLAdressPath(dir);
-    var listOfFolder = [];
+    const listOfFolder = [];
     if (fs.existsSync(dir)) {
         fs.readdirSync(dir).forEach(function (file) {
             file = dir + "/" + file;
-            var stat = fs.statSync(file);
+            const stat = fs.statSync(file);
             if (stat.isDirectory()) {
                 listOfFolder.push(file);
             } else {
@@ -34,12 +34,12 @@ router.get("/getListOfFolder/:path", (req, res) => {
 });
 
 router.get("/getListOfFilesAndFolders/:path", (req, res) => {
-    var dir = req.params.path;
+    let dir = req.params.path;
     dir = replaceHTMLAdressPath(dir);
-    var result = [];
+    let result = [];
     fs.readdirSync(dir).forEach(function (file) {
         file = dir + "/" + file;
-        var stat = fs.statSync(file);
+        const stat = fs.statSync(file);
         if (stat && stat.isDirectory()) {
             result = result.concat(file);
         } else {
@@ -72,7 +72,7 @@ router.post("/fillBlankImage", (req, res) => {
 
 router.get("/img/getColor/:img/:token", async (req, res) => {
     const token = resolveToken(req.params.token);
-    var img = CosmicComicsTemp + "/profiles/" + token + "/current_book/" + req.params.img;
+    const img = CosmicComicsTemp + "/profiles/" + token + "/current_book/" + req.params.img;
     const dominantColor = await getColor(img);
     res.send(dominantColor);
 });
@@ -105,6 +105,7 @@ router.get("/img/getPalette/:token", async (req, res) => {
 });
 
 const multer = require("multer");
+const {basename} = require("path");
 
 const upload = multer({ dest: CosmicComicsTemp + "/uploads/" });
 
@@ -127,7 +128,7 @@ router.get("/getDLBook", function (_req, res) {
     } else if (fs.existsSync(DLBOOKPATH) && !fs.statSync(DLBOOKPATH).isDirectory()) {
         res.download(DLBOOKPATH);
     } else if (fs.statSync(DLBOOKPATH).isDirectory()) {
-        const compress = Seven.add(root + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip", DLBOOKPATH, {
+        const compress = Seven.add(root + "/public/TODL/" + basename(DLBOOKPATH) + ".zip", DLBOOKPATH, {
             recursive: true,
             $bin: Path27Zip
         });
@@ -136,7 +137,7 @@ router.get("/getDLBook", function (_req, res) {
         });
         compress.on("end", () => {
             console.log("Compressed");
-            res.download(root + "/public/TODL/" + path.basename(DLBOOKPATH) + ".zip");
+            res.download(root + "/public/TODL/" + basename(DLBOOKPATH) + ".zip");
         });
     } else {
         res.sendStatus(404);
@@ -145,7 +146,7 @@ router.get("/getDLBook", function (_req, res) {
 
 router.get("/BM/getBM", (req, res) => {
     try {
-        var result = [];
+        const result = [];
         const token = resolveToken(req.headers.token);
         getDB(token).all("SELECT * FROM Bookmarks;", function (err, resD) {
             if (err) return console.log("Error getting element", err);

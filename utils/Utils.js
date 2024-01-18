@@ -1,10 +1,11 @@
 const fs = require("fs");
 const { root, CosmicComicsTemp } = require("./GlobalVariable");
-var rand = function () {
-    return Math.random().toString(36).substring(2); // remove `0.`
-};
-var tokena = function () {
-    return rand() + rand(); // to make it longer
+const webp = require('webp-converter');
+const {extname, basename} = require("path");
+let CryptoJS = require("crypto-js");
+
+const tokena = function () {
+    return CryptoJS.SHA256(Math.random().toString()).toString(CryptoJS.enc.Hex);
 };
 let mangaMode = false;
 const ValidatedExtensionImage = [
@@ -71,21 +72,21 @@ async function changePermissionForFilesInFolder(folderPath) {
 }
 
 function replaceHTMLAdressPath(path) {
-    var HTMLParam = path.replaceAll("%20", " ");
+    let HTMLParam = path.replaceAll("%20", " ");
     HTMLParam = HTMLParam.replaceAll("ù", "/").replaceAll("%C3%B9", "/").replaceAll("%23", "#");
     return HTMLParam;
 }
 
 
 function GetElFromInforPath(search, info) {
-    for (var i in info) {
-        if (i == search) {
+    for (const i in info) {
+        if (i === search) {
             return info[i];
         }
     }
     return null;
 }
-const webp = require('webp-converter');
+
 
 async function WConv(file) {
     try {
@@ -94,9 +95,9 @@ async function WConv(file) {
         console.log("WEBP CONVERTER ERROR: " + error);
     }
     let oldfile = root + "/public/FirstImagesOfAll/" + file;
-    let newfile = root + "/public/FirstImagesOfAll/" + path.basename(file) + ".webp";
+    let newfile = root + "/public/FirstImagesOfAll/" + basename(file) + ".webp";
     try {
-        if (path.extname(file) !== ".webp") {
+        if (extname(file) !== ".webp") {
             await webp
                 .cwebp(oldfile, newfile, "-q 80 -noalpha -resize 250 380")
                 .then((response) => {
@@ -114,20 +115,20 @@ async function WConv(file) {
 //Getting the list of images
 function GetListOfImg(dirPath) {
     if (fs.existsSync(dirPath)) {
-        var listoffiles = fs.readdirSync(dirPath);
-        var listOfImage = [];
+        const listoffiles = fs.readdirSync(dirPath);
+        const listOfImage = [];
         listoffiles.forEach((file) => {
-            var ext = file.split(".").pop();
+            const ext = file.split(".").pop();
             if (ValidatedExtensionImage.includes(ext)) {
                 listOfImage.push(file);
             } else {
                 console.log(file + " has an no compatible Viewer Extension: " + ext);
             }
         });
-        if (mangaMode == true) {
+        if (mangaMode === true) {
             return listOfImage.reverse();
         } else {
-            if (listOfImage.length == 0) {
+            if (listOfImage.length === 0) {
                 return false;
             } else {
                 return listOfImage;

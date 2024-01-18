@@ -1,7 +1,7 @@
 const express = require("express");
-var RateLimit = require('express-rate-limit');
+const RateLimit = require('express-rate-limit');
 let router = express.Router();
-var apiAnilistLimiter = RateLimit({
+const apiAnilistLimiter = RateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 90
 });

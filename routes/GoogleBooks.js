@@ -1,7 +1,7 @@
 const express = require("express");
-var RateLimit = require('express-rate-limit');
+const RateLimit = require('express-rate-limit');
 let router = express.Router();
-var apiGoogleLimiter = RateLimit({
+const apiGoogleLimiter = RateLimit({
     windowMs: 1 * 100 * 1000,
     max: 100
 });
