@@ -355,7 +355,7 @@ app.post("/createUser", function (req, res) {
             JSON.stringify(obj, null, 2), { encoding: "utf8" }
         );
     }
-    if (req.body.pp === {}) {
+    if (Object.keys(req.body.pp).length > 0) {
         let random = Math.floor(Math.random() * (fs.readdirSync(__dirname + "/public/Images/account_default/").length - 1) + 1);
         fs.copyFileSync(__dirname + "/public/Images/account_default/" + random + ".jpg", CosmicComicsTemp + "/profiles/" + name + "/pp.png");
     } else {
@@ -722,7 +722,7 @@ app.get("/profile/discover", (req, res) => {
             let resultOBJ = {};
             resultOBJ.name = path.basename(file, path.extname(file));
             resultOBJ.image = (req.headers["x-forwarded-proto"] || req.protocol) + "://" + req.headers.host + "/profile/getPPBN/" + path.basename(file, path.extname(file));
-            if (fs.existsSync(CosmicComicsTemp + "/profiles/" + file + "/passcode.txt")) {
+            if (fs.existsSync(CosmicComicsTemp + "/profiles/" + file + "/passcode.txt") && fs.readFileSync(CosmicComicsTemp + "/profiles/" + file + "/passcode.txt", "utf8") !== "_nopasswordisusedforthisaccount_") {
                 resultOBJ.passcode = true;
             } else {
                 resultOBJ.passcode = false;
@@ -2406,11 +2406,10 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
-app.post("/configServ/:name/:passcode/:port", (req, res) => {
+app.post("/configServ/:name/:passcode", (req, res) => {
     console.log("creating user");
     const name = req.params.name;
     const passcode = req.params.passcode;
-    const portServ = req.params.port;
     fs.mkdirSync(CosmicComicsTemp + "/profiles/" + name, { recursive: true });
     changePermissionForFilesInFolder(CosmicComicsTemp + "/profiles/" + name);
     console.log("Creating dir " + name);
@@ -2478,7 +2477,7 @@ app.post("/profile/modification", accountLimiter, (req, res) => {
     if (req.body.npass != null) {
         fs.writeFileSync(CosmicComicsTemp + "/profiles/" + token + "/passcode.txt", req.body.npass.trim(), { encoding: "utf-8" });
     }
-    if (req.body.npp !== {}) {
+    if (Object.keys(req.body.npp).length > 0) {
         let nppPath = req.body.npp.toString().replace(/http:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}){0,1}(localhost){0,1}:[0-9]{4}/g, __dirname + "/public");
         fs.copyFileSync(nppPath, CosmicComicsTemp + "/profiles/" + token + "/pp.png");
     }
